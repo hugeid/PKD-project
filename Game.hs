@@ -18,14 +18,14 @@ type Board = [[Cell]]
 
 cellSize = 40
 
-testboard = [[Void], [Void, Void, Void, Void], [Void, Void, Void], [Void, Void, Void],[Void]] 
+testboard = [[Void], [Void, Void, Void, Void], [Void, Void, Void], [Void, Void, Void, Void],[Void]] 
 
 initialGame = Game {board = testboard, player= PlayerBlue}
 
 gameAsPicture :: Game -> Picture
 gameAsPicture game = boardAsPicture $ board game
 
-boardAsPicture board = 
+boardAsPicture board = undefined
 {-
        g     
 b   0    0    y
