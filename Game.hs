@@ -1,6 +1,20 @@
 module Game where
 
 import Graphics.Gloss
+import Graphics.Gloss.Data.Picture
+
+
+screenWidth :: Int
+screenWidth = 800
+screenHeight :: Int
+screenHeight = 800
+
+cellSize :: Float
+cellSize = fromIntegral screenWidth/20
+cellWidth :: Float
+cellWidth = sqrt(3) * cellSize
+cellHeight :: Float
+cellHeight = 2 * cellSize
 
 data Cell = Void | Marble deriving (Show)
 
@@ -16,17 +30,11 @@ data Game = Game { board :: Board, player :: Player} deriving Show
 
 type Board = [[Cell]]
 
-cellSize = 40
-
 testboard = [[Void], [Void, Void, Void, Void], [Void, Void, Void], [Void, Void, Void, Void],[Void]] 
 
 initialGame = Game {board = testboard, player= PlayerBlue}
-
-gameAsPicture :: Game -> Picture
-gameAsPicture game = boardAsPicture $ board game
-
-boardAsPicture board = undefined
 {-
+
        g     
 b   0    0    y
   0    0   0
