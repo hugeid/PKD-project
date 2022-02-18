@@ -28,6 +28,7 @@ cellCoords x y = [(x, y+s*3), (x-w*1.5 ,y+s*1.5), (x-(w/2),y+s*1.5), (x+w/2, y+s
     where
         w = cellWidth
         s = cellSize
+        
 gameAsPicture :: Game -> Picture
 gameAsPicture game = boardAsPicture $ board game
 

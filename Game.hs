@@ -35,7 +35,7 @@ data Game = Game { board :: Board, player :: Player} deriving Show
 
 type Board = [Cell]
 
-testboard = [Marble green, Marble blue, Void, Void, Marble yellow, Void, Void, Void, Marble purple, Void, Void, Marble orange,Marble red] 
+testboard = [Marble green, Marble blue, Void, Void, Marble yellow, Void, Void, Void, Marble purple, Void, Void, Marble orange, Marble red] 
 
 initialGame = Game {board = testboard, player= PlayerBlue}
 {-
