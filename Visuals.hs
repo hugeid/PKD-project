@@ -40,7 +40,6 @@ boardAsPicture' [] = []
 boardAsPicture' (Void (x,y):cs) = hexagon x y grey : boardAsPicture' cs
 boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 
--- Player color i argument måste kunna pattern matchas (fungerar ej). (Color (000) är hex-färg som ska matcha color.
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
 gameTurn :: Game -> Picture
-gameTurn (Game board (Player c) _) = translate 150.0 300.0 (pictures $ [(scale 0.2 0.2 (Text "Player to move:")), (translate 230.0 10.0 (Color (c) (circleSolid 15)))])
+gameTurn (Game board (Player c) _) = translate 150.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), (translate 230.0 10.0 (color c (circleSolid 15)))])
