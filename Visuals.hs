@@ -33,10 +33,10 @@ gameAsPicture :: Game -> Picture
 gameAsPicture game = boardAsPicture $ board game
 
 boardAsPicture :: Board -> Picture
-boardAsPicture board = pictures $ boardAsPicture' board (cellCoords 0 0)
+boardAsPicture board = pictures $ boardAsPicture' board 
 
-boardAsPicture' :: [Cell] -> [(Float, Float)] -> [Picture]
-boardAsPicture' [] [] = []
-boardAsPicture' (Void:cs)  ((x,y):xs) = hexagon x y grey : boardAsPicture' cs xs
-boardAsPicture' (Marble c:cs) ((x,y):xs) = hexagon x y c : boardAsPicture' cs xs
+boardAsPicture' :: Board -> [Picture]
+boardAsPicture' [] = []
+boardAsPicture' (Void (x,y):cs) = hexagon x y grey : boardAsPicture' cs
+boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs 
 

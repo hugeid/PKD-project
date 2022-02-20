@@ -1,8 +1,7 @@
 module Game where
 
-import Graphics.Gloss
-import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Color
+import Graphics.Gloss
 
 purple :: Color
 purple = makeColorI 128 0 128 255
@@ -17,27 +16,23 @@ screenHeight = 800
 cellSize :: Float
 cellSize = fromIntegral screenWidth/20
 cellWidth :: Float
-cellWidth = sqrt(3) * cellSize
+cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
 
-data Cell = Void | Marble Color deriving (Show)
-
-data Player = PlayerRed 
-    | PlayerBlue 
-    | PlayerGreen 
-    | PlayerYellow 
-    | PlayerOrange 
-    | PlayerPurple deriving Show
-
-
-data Game = Game { board :: Board, player :: Player} deriving Show
+data Cell = Void Point | Marble Color Point deriving (Eq, Show)
 
 type Board = [Cell]
 
-testboard = [Marble green, Marble blue, Void, Void, Marble yellow, Void, Void, Void, Marble purple, Void, Void, Marble orange, Marble red] 
+newtype Player = Player Color deriving (Eq, Show)
 
-initialGame = Game {board = testboard, player= PlayerBlue}
+data Game = Game { board :: Board, player :: Player} deriving (Eq, Show)
+
+testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*1.5), Void (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void (-w, 0), Void (0, 0), Void (w, 0), Marble purple (-w*1.5, -s*1.5), Void (-(w/2), -s*1.5), Void (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)] 
+    where
+        w = cellWidth
+        s = cellSize 
+initialGame = Game {board = testboard, player= Player red}
 {-
 
        g     
