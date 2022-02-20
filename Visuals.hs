@@ -28,15 +28,19 @@ cellCoords x y = [(x, y+s*3), (x-w*1.5 ,y+s*1.5), (x-(w/2),y+s*1.5), (x+w/2, y+s
     where
         w = cellWidth
         s = cellSize
-        
+
 gameAsPicture :: Game -> Picture
-gameAsPicture game = boardAsPicture $ board game
+gameAsPicture game = pictures [boardAsPicture $ board game, gameTurn game]
 
 boardAsPicture :: Board -> Picture
-boardAsPicture board = pictures $ boardAsPicture' board 
+boardAsPicture board = pictures $ boardAsPicture' board
 
 boardAsPicture' :: Board -> [Picture]
 boardAsPicture' [] = []
 boardAsPicture' (Void (x,y):cs) = hexagon x y grey : boardAsPicture' cs
-boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs 
+boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 
+-- Player color i argument måste kunna pattern matchas (fungerar ej). (Color (000) är hex-färg som ska matcha color.
+-- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
+gameTurn :: Game -> Picture
+gameTurn (Game board (Player c) _) = translate 150.0 300.0 (pictures $ [(scale 0.2 0.2 (Text "Player to move:")), (translate 230.0 10.0 (Color (c) (circleSolid 15)))])
