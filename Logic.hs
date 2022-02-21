@@ -88,7 +88,6 @@ legalJumps' acc cell game = legalJumps'' acc cell  (filter (not . isVoid) (neigh
 -}
 legalJumps'' :: [Cell] -> Cell -> [Cell] -> Game -> [Cell]
 legalJumps'' acc (Marble c1 (x1,y1)) (Marble _ (x2,y2):cs) game = 
-    trace ("marbler" ++ show acc) $
     let newCoords = (x1-2*(x1-x2), y1-2*(y1-y2)) in
     if canMoveTo newCoords (board game)
         then let newCell = findCell newCoords (board game) in
@@ -101,7 +100,6 @@ legalJumps'' acc (Marble c1 (x1,y1)) (Marble _ (x2,y2):cs) game =
 
 legalJumps'' acc (Void c1 (x1,y1)) (Marble _ (x2,y2):cs) game = 
     let newCoords = (x1-2*(x1-x2), y1-2*(y1-y2)) in
-    trace ("voider "++show acc) $
     if canMoveTo newCoords (board game)
         then let newCell = findCell newCoords (board game) in
             if newCell `notElem` acc
