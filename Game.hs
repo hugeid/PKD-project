@@ -14,7 +14,7 @@ screenHeight :: Int
 screenHeight = 700
 
 cellSize :: Float
-cellSize = fromIntegral screenWidth/20
+cellSize = fromIntegral screenWidth/35
 cellWidth :: Float
 cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
@@ -39,7 +39,6 @@ testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*
     where
         w = cellWidth
         s = cellSize 
-
 
 --- 6-marble board
 
@@ -72,8 +71,62 @@ coordToEncoder lst "b9" = zip lst (replicate (length lst) "cR")
 
 --- end of 6-marble board
 
+--- 10-marble board
 
-initialGame = Game {board = boardSize6m, player= Player red, state = Running}
+cross = vert ++ horiz
+
+vert = [(0,-6),(0,-3),(0,3),(0,6)]
+horiz = zip [(-4),(-3)..4] (replicate 9 0)
+
+startlist = zip [(-0.5),0..1] [1.5,3..6]
+
+xAddOne [(x,y)] = [(x+1,y)]
+xAddOne lst =  z ++ xAddOne (init z)
+    where
+        z = [(x+1,y) | (x,y) <- lst]
+
+getIndices [(x,y)] = [(x+1,y)]
+getIndices lst =  last(z) : getIndices (init z)
+    where
+        z = [(x+1,y) | (x,y) <- lst]
+
+fork = [(0.5,4.5),(1,6)]
+getTriTR = (xAddOne startlist) ++ fork
+getTriTL = invertX getTriTR
+getTriBL = invertY getTriTL
+getTriBR = invertX getTriBL
+triangles = getTriTR ++ getTriTL ++ getTriBL ++ getTriBR
+
+getcY = xAddOne (getIndices startlist)
+getcO = invertY getcY
+getcP = invertX getcO
+getcB = invertY getcP
+getcG = transpose getcP
+getcR = invertY getcG
+
+
+invertX lst = [(-x,y) | (x,y) <- lst]
+invertY lst = [(x,-y) | (x,y) <- lst]
+
+transpose lst = [(x+4.5,y+13.5) | (x,y) <- lst]
+
+cTe2 :: [(Float,Float)] -> String -> [((Float,Float),String)]
+cTe2 lst "grey" = [(z,"") | z <- lst]
+cTe2 lst "yellow" = [(z,"cY") | z <- lst]
+cTe2 lst "orange" = [(z,"cO") | z <- lst]
+cTe2 lst "purple" = [(z,"cP") | z <- lst]
+cTe2 lst "blue" = [(z,"cB") | z <- lst]
+cTe2 lst "green" = [(z,"cG") | z <- lst]
+cTe2 lst "red" = [(z,"cR") | z <- lst]
+
+encodedLst = cTe2 (cross ++ triangles) "grey" ++ cTe2 getcY "yellow" ++ cTe2 getcO "orange" ++ cTe2 getcP "purple" ++ cTe2 getcB "blue" ++ cTe2 getcG "green" ++ cTe2 getcR "red"
+
+boardSize10m = encoderToCell encodedLst
+
+--- end of 10-marble board
+
+initialGame = Game {board = boardSize10m, player= Player red, state = Running}
+
 {-
 
        g     
