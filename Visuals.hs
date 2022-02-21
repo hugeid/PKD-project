@@ -42,4 +42,4 @@ boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
 gameTurn :: Game -> Picture
-gameTurn (Game board (Player c) _) = translate 150.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), (translate 230.0 10.0 (color c (circleSolid 15)))])
+gameTurn (Game board (Player c) _) = translate 50.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), (translate 230.0 10.0 (color c (circleSolid 15)))])
