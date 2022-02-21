@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Logic where
 
 import Graphics.Gloss
@@ -11,10 +12,11 @@ import Visuals
 
 
 transformGame :: Event -> Game -> Game
-transformGame (EventKey (MouseButton LeftButton) Up _ mousePos) game = 
-    case state game of 
+transformGame (EventKey (MouseButton LeftButton) Up _ mousePos) game =
+    case state game of
         GameOver -> initialGame
         _        -> onClick mousePos game
+transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
 transformGame _ game = game
 
 onClick :: (Float, Float) -> Game -> Game
@@ -28,10 +30,10 @@ checkCells (x, y) game = checkCells' (x, y) (board game)
 
 checkCells' :: (Float, Float) -> Board -> Maybe Cell
 checkCells' _ [] = Nothing
-checkCells' (x1, y1) ((Void (x2,y2)):cs) 
-    | isInCell (x2,y2) (x1,y1) = Just (Void (x2,y2))
+checkCells' (x1, y1) ((Void c (x2,y2)):cs)
+    | isInCell (x2,y2) (x1,y1) = Just (Void c (x2,y2))
     | otherwise = checkCells' (x1, y1) cs
-checkCells' (x1, y1) ((Marble c (x2,y2)):cs) 
+checkCells' (x1, y1) ((Marble c (x2,y2)):cs)
     | isInCell (x2,y2) (x1,y1) = Just (Marble c (x2,y2))
     | otherwise = checkCells' (x1, y1) cs
 
@@ -44,49 +46,110 @@ onCellClick (Just (Marble c (x,y))) game = let Player pc = player game
         else
             game
 
-onCellClick (Just (Void (x,y))) game = case state game of
-    ShowingMoves cell -> move cell (Void (x,y)) game
+onCellClick (Just (Void c (x,y))) game = case state game of
+    ShowingMoves cell -> move cell (Void c (x,y)) game
     _            -> game
 
 move :: Cell -> Cell -> Game -> Game
-move from to game 
-    | isLegalMove from to game = game
+move from@(Marble c (x,y)) to@(Void _ (x2,y2)) game
+    | isLegalMove from to game = nextTurn Game {board = unbrighten $ replaceCells [to,from] [Marble c (x2,y2),Void grey (x,y)](board game), player = player game, state = Running} --replaceCell from (Void grey (x,y)) 
     | otherwise = game
 
+-- to : Void (grey) (34.641014,-60.0)
+-- from : Marble (red) (0.0,-120.0)
+{- board : 
+[                           Marble green (0.0,120.0),
+Marble blue (-103.92304,60.0),Void grey (-34.641014,60.0),Void grey (34.641014,60.0), Marble yellow (103.92304,60.0),
+        Void grey (-69.28203,0.0),Void grey (0.0,0.0),Void grey (69.28203,0.0),
+Marble purple (-103.92304,-60.0),Void grey (-34.641014,-60.0),Void grey (34.641014,-60.0),Marble orange (103.92304,-60.0),
+                        Marble red (0.0,-120.0)]
+-}
 showMoves :: Cell -> Game -> Game
-showMoves = undefined
+showMoves cell game = let moves = legalMoves cell game
+    in
+       Game {board=replaceCells moves (map brighten moves) (board game), player = player game, state = ShowingMoves cell}
 
 legalMoves :: Cell -> Game -> [Cell]
-legalMoves cell game = undefined--(filter isVoid . neighbours cell) ++ legalJumps cell game
+legalMoves cell game = filter isVoid (neighbours cell (board game)) ++ legalJumps cell game
 
+{-legalJumps cell game
+    
+    RETURNS: a list of cells to which the player can jump to from cell 
+-}
 legalJumps :: Cell -> Game -> [Cell]
-legalJumps cell = undefined -- legalJumps' (filter (not . isVoid) . neighbours cell) cell
+legalJumps cell game = legalJumps' [] cell game
 
-legalJumps' :: [Cell] -> Cell -> [Cell]
-legalJumps' ((Marble c (x1,y1)):cs) = undefined
+legalJumps' :: [Cell] -> Cell -> Game -> [Cell]
+legalJumps' acc cell game = legalJumps'' acc cell  (filter (not . isVoid) (neighbours cell (board game))) game 
+
+{-legalJumps'' acc cell cs game
+    helper function from legalJumps'
+    cs are the non-Void neighbouring cells to cell
+-}
+legalJumps'' :: [Cell] -> Cell -> [Cell] -> Game -> [Cell]
+legalJumps'' acc (Marble c1 (x1,y1)) (Marble _ (x2,y2):cs) game = 
+    trace ("marbler" ++ show acc) $
+    let newCoords = (x1-2*(x1-x2), y1-2*(y1-y2)) in
+    if canMoveTo newCoords (board game)
+        then let newCell = findCell newCoords (board game) in
+            if newCell `notElem` acc
+                then
+                    legalJumps'' (newCell : acc ++ legalJumps' (newCell:acc) newCell game) (Marble c1 (x1,y1)) cs game
+                else
+                    legalJumps'' acc (Marble c1 (x1,y1)) cs game
+        else legalJumps'' acc (Marble c1 (x1,y1)) cs game
+
+legalJumps'' acc (Void c1 (x1,y1)) (Marble _ (x2,y2):cs) game = 
+    let newCoords = (x1-2*(x1-x2), y1-2*(y1-y2)) in
+    trace ("voider "++show acc) $
+    if canMoveTo newCoords (board game)
+        then let newCell = findCell newCoords (board game) in
+            if newCell `notElem` acc
+                then
+                    legalJumps'' (newCell : acc ++ legalJumps' (newCell:acc) newCell game) (Void c1 (x1,y1)) cs game 
+                else
+                    legalJumps'' acc (Void c1 (x1,y1)) cs game
+        else legalJumps'' acc (Void c1 (x1,y1)) cs game
+
+legalJumps'' acc _ _ _ = acc
+
+canMoveTo :: Point -> Board -> Bool
+canMoveTo _ [] = False
+canMoveTo p1 (Marble c p2:cs) = canMoveTo p1 cs
+canMoveTo p1 (Void c p2:cs) = p1 == p2 || canMoveTo p1 cs
 
 isLegalMove :: Cell -> Cell -> Game ->Bool
 isLegalMove from to game = elem to $ legalMoves from game
 
+{-replaceCells oldCells newCells board
+    replaces all oldCells with newCells in board
+-}
+replaceCells :: [Cell] -> [Cell] -> Board -> Board
+replaceCells _ [] board = board
+replaceCells [] _ board = board
+replaceCells (x:xs) (y:ys) board = replaceCells xs ys (replaceCell x y board)
 
+{-replaceCell oldCell newCell board
+    replaces oldCell with newCell in board
+-}
 replaceCell :: Cell -> Cell -> Board -> Board
 replaceCell _ _ [] = []
-replaceCell oldCell newCell (c:cs) 
+replaceCell oldCell newCell (c:cs)
     | oldCell == c = newCell : cs
-    | otherwise = c:replaceCell oldCell newCell cs
+    | otherwise =  c:replaceCell oldCell newCell cs
 
 isVoid :: Cell -> Bool
-isVoid (Void _) = True
+isVoid (Void _ _) = True
 isVoid _ = False
 
 cyclePlayer :: Player -> Player
-cyclePlayer (Player c) = Player $ swapC c 
+cyclePlayer (Player c) = Player $ swapC c
 
 nextTurn :: Game -> Game
 nextTurn game = Game {board = board game, player = cyclePlayer $ player game, state = state game}
 
 swapC :: Color -> Color
-swapC c 
+swapC c
     | c == red = purple
     | c == purple = blue
     | c == blue = green
@@ -106,7 +169,7 @@ extractCordslist :: Board -> [Point]
 extractCordslist xs = map extractCords xs
 
 extractCords :: Cell -> Point
-extractCords (Void (x,y)) = (x, y)
+extractCords (Void c (x,y)) = (x, y)
 extractCords (Marble c (x,y)) = (x, y)
 
 neighbours :: Cell -> Board -> [Cell]
@@ -115,7 +178,7 @@ neighbours c board = findOnBoard (neighbours' (extractCordslist board) (extractC
 -- Returns all the neighbouring cells of a certain cell
 neighbours' :: [Point] -> (Float, Float) -> [Point]
 neighbours' listofcoords (x, y) = filter ((==x+w) . fst) samerow ++ filter ((==x-w) . fst) samerow ++ filter ((==x+w/2) . fst) upperrow ++ filter ((==x-w/2) . fst) upperrow ++ filter ((==x+w/2) . fst) lowerrow ++ filter ((==x-w/2) . fst) lowerrow
-    where 
+    where
         w = cellWidth
         s = cellSize
         samerow = filter ((==y) . snd) listofcoords
