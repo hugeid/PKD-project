@@ -14,13 +14,13 @@ screenHeight :: Int
 screenHeight = 700
 
 cellSize :: Float
-cellSize = fromIntegral screenWidth/70
+cellSize = fromIntegral screenWidth/35
 cellWidth :: Float
 cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
 
-data Cell = Void Point | Marble Color Point deriving (Eq, Show)
+data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 
 type Board = [Cell]
 
@@ -33,12 +33,14 @@ data GameState = Running | GameOver | ShowingMoves Cell deriving (Eq, Show)
 
 data Game = Game { board :: Board, player :: Player, state :: GameState} deriving (Eq, Show)
 
+{-
 testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*1.5), Void (w/2, s*1.5),
   Marble yellow (w*1.5, s*1.5), Void (-w, 0), Void (0, 0), Void (w, 0), Marble purple (-w*1.5, -s*1.5),
   Void (-(w/2), -s*1.5), Void (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)] 
     where
         w = cellWidth
         s = cellSize 
+-}
 
 
 
@@ -115,9 +117,9 @@ cTe lst "red" = [(z,"cR") | z <- lst]
 encodedLst n = cTe ((cross n) ++ (triangles n)) "grey" ++ cTe (getcY n) "yellow" ++ cTe (getcO n) "orange" ++ cTe (getcP n) "purple" ++ cTe (getcB n) "blue" ++ cTe (getcG n) "green" ++ cTe (getcR n) "red"
 
 encoderToCell :: [((Float,Float),String)] -> [Cell]
-encoderToCell [((f1,f2),"")] = [Void (f1*cellWidth,f2*cellSize)]
+encoderToCell [((f1,f2),"")] = [Void grey (f1*cellWidth,f2*cellSize)]
 encoderToCell [((f1,f2),c)] = [Marble (strToColor c) (f1*cellWidth,f2*cellSize)]
-encoderToCell (((f1,f2),""):fs) = Void (f1*cellWidth,f2*cellSize) : encoderToCell fs
+encoderToCell (((f1,f2),""):fs) = Void grey (f1*cellWidth,f2*cellSize) : encoderToCell fs
 encoderToCell (((f1,f2),c):fs) = Marble (strToColor c) (f1*cellWidth,f2*cellSize) : encoderToCell fs
 
 strToColor :: [Char] -> Color
@@ -128,13 +130,14 @@ strToColor "cY" = yellow
 strToColor "cB" = blue
 strToColor "cG" = green
 
+
 boardSize n = encoderToCell (encodedLst (n-1))
 
 --- End of modular board
 
 
 
-initialGame = Game {board = (boardSize 11), player= Player red, state = Running}
+initialGame = Game {board = (boardSize 6), player= Player red, state = Running}
 
 {-
 

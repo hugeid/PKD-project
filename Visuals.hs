@@ -6,8 +6,14 @@ import Graphics.Gloss.Data.Color
 
 import Game
 
+brighten :: Cell -> Cell
+brighten (Void c (x,y)) = Void (bright grey) (x,y)
+brighten (Marble c (x,y)) = Marble (bright c) (x,y)
 
-
+unbrighten :: Board -> Board
+unbrighten [] = []
+unbrighten ((Void _ (x,y)):cs) = Void grey (x,y):unbrighten cs
+unbrighten (c:cs) = c:unbrighten cs
 
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
@@ -37,7 +43,7 @@ boardAsPicture board = pictures $ boardAsPicture' board
 
 boardAsPicture' :: Board -> [Picture]
 boardAsPicture' [] = []
-boardAsPicture' (Void (x,y):cs) = hexagon x y grey : boardAsPicture' cs
+boardAsPicture' (Void c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
