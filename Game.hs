@@ -14,7 +14,7 @@ screenHeight :: Int
 screenHeight = 700
 
 cellSize :: Float
-cellSize = fromIntegral screenWidth/35
+cellSize = fromIntegral screenWidth/70
 cellWidth :: Float
 cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
@@ -40,9 +40,79 @@ testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*
         w = cellWidth
         s = cellSize 
 
---- 6-marble board
 
-boardSize6m = encoderToCell (coordToEncoder (zip [(-3)..3] (replicate 7 0)) "b1" ++ coordToEncoder (zip [(-3.5),(-2.5)..3.5] (replicate 8 1.5)) "b2" ++ coordToEncoder (zip [(-3.5),(-2.5)..3.5] (replicate 8 (-1.5))) "b3" ++ coordToEncoder (zip [(-4)..4] (replicate 9 3)) "b4" ++ coordToEncoder (zip [(-4)..4] (replicate 9 (-3))) "b5" ++ coordToEncoder (zip [(-4.5),(-3.5)..4.5] (replicate 10 4.5)) "b6" ++ coordToEncoder (zip [(-4.5),(-3.5)..4.5] (replicate 10 (-4.5))) "b7" ++ coordToEncoder [(0,6),(1,6),(0,9),(0.5,7.5),((-1),6),((-0.5),7.5)] "b8" ++ coordToEncoder [(0,(-6)),(1,(-6)),(0,(-9)),(0.5,(-7.5)),((-1),(-6)),((-0.5),(-7.5))] "b9")
+
+--- Modular board
+
+cross :: Int -> [(Float,Float)]
+cross n = [((fromIntegral x),(fromIntegral y)) | (x,y) <- (vert n ++ horiz n)]
+
+vertZip n 
+  | n >= 2 = zip (replicate (3+2*(n-2)) 0) [(-3)*(n-1),0+(-3)*(n-2)..3*(n-1)]
+  | n == 1 = zip (replicate 3 0) [(-3),0..3]
+  | n == 0 = []
+
+vert n = [z | z <- (vertZip n), z /= (0,0)]
+
+horiz n = zip [((-1)-n),(0-n)..1+n] (replicate (3+2*n) 0)
+
+startlist :: Int -> [(Float,Float)]
+startlist n
+  | n == 0 = zip [(-0.5)] [1.5]
+  | n == 1 = zip [(-0.5),0] [1.5,3]
+  | n >= 2 = zip [(-0.5),0..0.5*((fromIntegral n)-1)] [1.5,3..1.5+1.5*(fromIntegral n)]
+
+xAddOne [(x,y)] = [(x+1,y)]
+xAddOne lst =  z ++ xAddOne (init z)
+    where
+        z = [(x+1,y) | (x,y) <- lst]
+
+getIndices [(x,y)] = [(x+1,y)]
+getIndices lst =  last(z) : getIndices (init z)
+    where
+        z = [(x+1,y) | (x,y) <- lst]
+
+fork n 
+  | n == 2 = [(0.5,4.5)]
+  | n > 2 = fork ((fromIntegral n)-1) ++ diminisher z
+    where
+        z = [((0.5+(0.5*((fromIntegral n)-2))),(4.5+(1.5*((fromIntegral n)-2))))]
+
+diminisher [(x,y)]
+  | (x-1) == 0 = [(x,y)]
+  | (x-1) == (-0.5) = [(x,y)]
+  | (x-1) > 0 = [(x,y)] ++ diminisher [((x-1),y)]
+
+getTriTR n = if n <= 1 then (xAddOne (startlist n)) else (xAddOne (startlist n)) ++ fork n
+getTriTL n = invertX (getTriTR n)
+getTriBL n = invertY (getTriTL n)
+getTriBR n = invertX (getTriBL n)
+triangles n = (getTriTR n) ++ (getTriTL n) ++ (getTriBL n) ++ (getTriBR n)
+
+getcY n = xAddOne (getIndices (startlist n))
+getcO n = invertY (getcY n)
+getcP n = invertX (getcO n)
+getcB n = invertY (getcP n)
+getcG n = transpose (getcP n) n
+getcR n = invertY (getcG n)
+
+invertX lst = [(-x,y) | (x,y) <- lst]
+invertY lst = [(x,-y) | (x,y) <- lst]
+
+transpose lst n = [(x+1.5+(1*(fromIntegral n)),y+4.5+(3*(fromIntegral n))) | (x,y) <- lst]
+
+{- coordinatesToEncoder
+-}
+cTe :: [(Float,Float)] -> String -> [((Float,Float),String)]
+cTe lst "grey" = [(z,"") | z <- lst]
+cTe lst "yellow" = [(z,"cY") | z <- lst]
+cTe lst "orange" = [(z,"cO") | z <- lst]
+cTe lst "purple" = [(z,"cP") | z <- lst]
+cTe lst "blue" = [(z,"cB") | z <- lst]
+cTe lst "green" = [(z,"cG") | z <- lst]
+cTe lst "red" = [(z,"cR") | z <- lst]
+
+encodedLst n = cTe ((cross n) ++ (triangles n)) "grey" ++ cTe (getcY n) "yellow" ++ cTe (getcO n) "orange" ++ cTe (getcP n) "purple" ++ cTe (getcB n) "blue" ++ cTe (getcG n) "green" ++ cTe (getcR n) "red"
 
 encoderToCell :: [((Float,Float),String)] -> [Cell]
 encoderToCell [((f1,f2),"")] = [Void (f1*cellWidth,f2*cellSize)]
@@ -58,74 +128,13 @@ strToColor "cY" = yellow
 strToColor "cB" = blue
 strToColor "cG" = green
 
-coordToEncoder :: [(Float,Float)] -> String -> [((Float,Float),String)]
-coordToEncoder lst "b1" = zip lst (replicate (length lst) "")
-coordToEncoder (f:fs) "b2" = (f,"cB") : (last(fs),"cY") : coordToEncoder (init fs) "b1"
-coordToEncoder (f:fs) "b3" = (f,"cP") : (last(fs),"cO") : coordToEncoder (init fs) "b1"
-coordToEncoder (f1:f2:fs) "b4" = (f1,"cB") : (f2,"cB") : (last(fs),"cY") : (last(init(fs)),"cY") : coordToEncoder (init(init(fs))) "b1"
-coordToEncoder (f1:f2:fs) "b5" = (f1,"cP") : (f2,"cP") : (last(fs),"cO") : (last(init(fs)),"cO") : coordToEncoder (init(init(fs))) "b1"
-coordToEncoder [f1,f2,f3,f4,f5,f6,f7,f8,f9,f10] "b6" = [(f1,"cB"),(f2,"cB"),(f3,"cB"),(f4,""),(f5,""),(f6,""),(f7,""),(f8,"cY"),(f9,"cY"),(f10,"cY")]
-coordToEncoder [f1,f2,f3,f4,f5,f6,f7,f8,f9,f10] "b7" = [(f1,"cP"),(f2,"cP"),(f3,"cP"),(f4,""),(f5,""),(f6,""),(f7,""),(f8,"cO"),(f9,"cO"),(f10,"cO")]
-coordToEncoder lst "b8" = zip lst (replicate (length lst) "cG")
-coordToEncoder lst "b9" = zip lst (replicate (length lst) "cR")
+boardSize n = encoderToCell (encodedLst (n-1))
 
---- end of 6-marble board
-
---- 10-marble board
-
-cross = vert ++ horiz
-
-vert = [(0,-6),(0,-3),(0,3),(0,6)]
-horiz = zip [(-4),(-3)..4] (replicate 9 0)
-
-startlist = zip [(-0.5),0..1] [1.5,3..6]
-
-xAddOne [(x,y)] = [(x+1,y)]
-xAddOne lst =  z ++ xAddOne (init z)
-    where
-        z = [(x+1,y) | (x,y) <- lst]
-
-getIndices [(x,y)] = [(x+1,y)]
-getIndices lst =  last(z) : getIndices (init z)
-    where
-        z = [(x+1,y) | (x,y) <- lst]
-
-fork = [(0.5,4.5),(1,6)]
-getTriTR = (xAddOne startlist) ++ fork
-getTriTL = invertX getTriTR
-getTriBL = invertY getTriTL
-getTriBR = invertX getTriBL
-triangles = getTriTR ++ getTriTL ++ getTriBL ++ getTriBR
-
-getcY = xAddOne (getIndices startlist)
-getcO = invertY getcY
-getcP = invertX getcO
-getcB = invertY getcP
-getcG = transpose getcP
-getcR = invertY getcG
+--- End of modular board
 
 
-invertX lst = [(-x,y) | (x,y) <- lst]
-invertY lst = [(x,-y) | (x,y) <- lst]
 
-transpose lst = [(x+4.5,y+13.5) | (x,y) <- lst]
-
-cTe2 :: [(Float,Float)] -> String -> [((Float,Float),String)]
-cTe2 lst "grey" = [(z,"") | z <- lst]
-cTe2 lst "yellow" = [(z,"cY") | z <- lst]
-cTe2 lst "orange" = [(z,"cO") | z <- lst]
-cTe2 lst "purple" = [(z,"cP") | z <- lst]
-cTe2 lst "blue" = [(z,"cB") | z <- lst]
-cTe2 lst "green" = [(z,"cG") | z <- lst]
-cTe2 lst "red" = [(z,"cR") | z <- lst]
-
-encodedLst = cTe2 (cross ++ triangles) "grey" ++ cTe2 getcY "yellow" ++ cTe2 getcO "orange" ++ cTe2 getcP "purple" ++ cTe2 getcB "blue" ++ cTe2 getcG "green" ++ cTe2 getcR "red"
-
-boardSize10m = encoderToCell encodedLst
-
---- end of 10-marble board
-
-initialGame = Game {board = boardSize10m, player= Player red, state = Running}
+initialGame = Game {board = (boardSize 11), player= Player red, state = Running}
 
 {-
 
