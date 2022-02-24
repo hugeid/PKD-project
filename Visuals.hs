@@ -7,13 +7,16 @@ import Graphics.Gloss.Data.Color
 import Game
 
 brighten :: Cell -> Cell
-brighten (Void c (x,y)) = Void (bright grey) (x,y)
+brighten (Void c (x,y)) = Void (bright $ bright grey) (x,y)
 brighten (Marble c (x,y)) = Marble (bright c) (x,y)
 
 unbrighten :: Board -> Board
 unbrighten [] = []
 unbrighten ((Void _ (x,y)):cs) = Void grey (x,y):unbrighten cs
 unbrighten (c:cs) = c:unbrighten cs
+
+unbrightenGame :: Game -> Game
+unbrightenGame game = Game {board = unbrighten (board game), player = player game, state = state game}
 
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
