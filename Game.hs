@@ -163,7 +163,7 @@ cTe lst "green" = [(z,"cG") | z <- lst]
 cTe lst "red" = [(z,"cR") | z <- lst]
 
 {- The concatenated list of all color encoders, i.e., a list of coordinates with color strings.
-  The list consists of tuples of the form [(coordinates, color string)].
+  The list consists of tuples of the form (coordinates, color string).
 -}
 encodedLst n = cTe ([(0,0)] ++ t1 ++ t2 ++ tri4n5 t1 ++ tri4n5 t2 ++ tri6 f t2 ++ tri3 f t2) "grey" ++ cTe (tricG f t1) "green" ++ cTe (tricR f t1) "red" ++ cTe (tricY f t2) "yellow" ++ cTe (tricO f t2) "orange" ++ cTe (tricP f t2) "purple" ++ cTe (tricB f t2) "blue"
     where
