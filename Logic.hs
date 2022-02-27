@@ -119,7 +119,10 @@ legalJumps'' acc _ _ _ = acc
 canMoveTo :: Point -> Board -> Bool
 canMoveTo _ [] = False
 canMoveTo p1 (Marble c p2:cs) = canMoveTo p1 cs
-canMoveTo p1 (Void c p2:cs) = p1 == p2 || canMoveTo p1 cs
+canMoveTo p1 (Void c p2:cs) = truncateS p1 == truncateS p2 || canMoveTo p1 cs
+
+truncateS ::Integral a => (Float, Float) -> (a, a)
+truncateS (x,y) = (truncate x, truncate y)
 
 isLegalMove :: Cell -> Cell -> Game ->Bool
 isLegalMove from to game = elem to $ legalMoves from game
@@ -176,7 +179,7 @@ extractCords (Void c (x,y)) = (x, y)
 extractCords (Marble c (x,y)) = (x, y)
 
 listOfNeighbours :: (Float, Float) -> [(Float, Float)]
-listOfNeighbours (x,y) = trace ("neighbour coords: " ++ show [(x+w,y),(x-w,y),(x+(w/2),y+(s*1.5)),(x-(w/2),y+(s*1.5)),(x+(w/2),y-(s*1.5)),(x-(w/2),y-(s*1.5))]) [(x+w,y),(x-w,y),(x+(w/2),y+(s*1.5)),(x-(w/2),y+(s*1.5)),(x+(w/2),y-(s*1.5)),(x-(w/2),y-(s*1.5))]
+listOfNeighbours (x,y) = [(x+w,y),(x-w,y),(x+(w/2),y+(s*1.5)),(x-(w/2),y+(s*1.5)),(x+(w/2),y-(s*1.5)),(x-(w/2),y-(s*1.5))]
     where s = cellSize
           w = cellWidth
 

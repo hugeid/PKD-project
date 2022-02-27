@@ -20,7 +20,6 @@ unbrightenGame game = Game {board = unbrighten (board game), player = player gam
 
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
-
 p1 = hexagon 0 0 red
 
 hexaCorners :: Float -> Float -> Float -> Path
