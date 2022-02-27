@@ -4,7 +4,6 @@ module Logic where
 import Graphics.Gloss
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Color
-import Graphics.Gloss.Interface.Pure.Game
 import Debug.Trace
 
 import Game
@@ -92,7 +91,7 @@ showMoves cell game = let moves = legalMoves cell game
        Game {board=replaceCells moves (map brighten moves) (board game), player = player game, state = ShowingMoves cell}
 
 legalMoves :: Cell -> Game -> [Cell]
-legalMoves cell game = trace ("neighbour CELLS: " ++ show (neighbours cell (board game))) filter isVoid (neighbours cell (board game)) ++ legalJumps cell game
+legalMoves cell game = filter isVoid (neighbours cell (board game)) ++ legalJumps cell game
 
 {-legalJumps cell game
     
