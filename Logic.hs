@@ -14,8 +14,9 @@ import Visuals
 transformGame :: Event -> Game -> Game
 transformGame (EventKey (MouseButton LeftButton) Up _ mousePos) game =
     case state game of
-        GameOver -> initialGame
+        GameOver _ -> game
         _        -> onClick mousePos game
+
 transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
 transformGame _ game = game
 
@@ -57,8 +58,24 @@ onCellClick (Just (Void c (x,y))) game =
 
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x,y)) to@(Void _ (x2,y2)) game
-    | isLegalMove from to game = nextTurn Game {board = unbrighten $ replaceCells [to,from] [Marble c (x2,y2),Void grey (x,y)](board game), player = player game, state = Running} --replaceCell from (Void grey (x,y)) 
+    | isLegalMove from to game = let newGame = nextTurn Game {board = unbrighten $ replaceCells [to,from] [Marble c (x2,y2),Void grey (x,y)](board game), player = player game, state = Running} 
+        in 
+            if checkWinner (player game) (board newGame) then
+                Game {board = board newGame, player = player newGame, state = GameOver (player game)}
+            else
+                newGame
+
     | otherwise = game
+
+checkWinner :: Player -> Board -> Bool
+checkWinner (Player c) board = checkWinner' [cell | cell <- board, extractColor cell == c]
+
+checkWinner' :: Board -> Bool
+checkWinner' [] = True
+checkWinner' (c:cs) 
+    | elem c winnerBoard = checkWinner' cs
+    | otherwise = False
+
 
 -- to : Void (grey) (34.641014,-60.0)
 -- from : Marble (red) (0.0,-120.0)
@@ -177,6 +194,10 @@ extractCordslist xs = map extractCords xs
 extractCords :: Cell -> Point
 extractCords (Void c (x,y)) = (x, y)
 extractCords (Marble c (x,y)) = (x, y)
+
+extractColor :: Cell -> Color
+extractColor (Void c (x,y)) = c
+extractColor (Marble c (x,y)) = c
 
 listOfNeighbours :: (Float, Float) -> [(Float, Float)]
 listOfNeighbours (x,y) = [(x+w,y),(x-w,y),(x+(w/2),y+(s*1.5)),(x-(w/2),y+(s*1.5)),(x+(w/2),y-(s*1.5)),(x-(w/2),y-(s*1.5))]

@@ -22,7 +22,8 @@ cellHeight = 2 * cellSize
 
 
 bSize :: Int
-bSize = 3
+bSize = 1
+
 
 
 data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
@@ -33,7 +34,7 @@ newtype Player = Player Color deriving (Eq, Show)
 
 data GamePlayers = PlayerRed
 
-data GameState = Running | GameOver | ShowingMoves Cell deriving (Eq, Show)
+data GameState = Running | GameOver Player| ShowingMoves Cell deriving (Eq, Show)
 
 data Game = Game { board :: Board, player :: Player, state :: GameState} deriving (Eq, Show)
 
@@ -43,7 +44,6 @@ testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void grey (-(w/
     where
         w = cellWidth
         s = cellSize
-
 
 
 {- Transposes a list of coordinates diagonally. PP means plus Y, plus X (northeast),
@@ -188,10 +188,15 @@ boardSize n = eTc (encodedLst n)
 
 
 
-initialGame = Game {board = (boardSize bSize), player= Player red, state = Running}
+initialGame = Game {board = boardSize bSize, player= Player red, state = Running}
 
+winnerBoard :: Board
+winnerBoard = inverse $ boardSize bSize 
 
-
+inverse :: Board -> Board
+inverse [] = []
+inverse (Marble c (x,y): cs) = Marble c (negate x, negate y):inverse cs
+inverse (Void c (x,y): cs) = Marble c (negate x, negate y):inverse cs
 
 {-
 

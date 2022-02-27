@@ -38,7 +38,9 @@ cellCoords x y = [(x, y+s*3), (x-w*1.5 ,y+s*1.5), (x-(w/2),y+s*1.5), (x+w/2, y+s
         s = cellSize
 
 gameAsPicture :: Game -> Picture
-gameAsPicture game = pictures [boardAsPicture $ board game, gameTurn game]
+gameAsPicture game = case state game of 
+    GameOver (Player c) ->  pictures [boardAsPicture $ board game, gameOverText c]
+    _        -> pictures [boardAsPicture $ board game, gameTurn game]
 
 boardAsPicture :: Board -> Picture
 boardAsPicture board = pictures $ boardAsPicture' board
@@ -51,3 +53,6 @@ boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
 gameTurn :: Game -> Picture
 gameTurn (Game board (Player c) _) = translate 50.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), (translate 230.0 10.0 (color c (circleSolid 15)))])
+
+gameOverText :: Color -> Picture
+gameOverText c = translate 50.0 300.0 (pictures $ [(scale 0.2 0.2 (text $ "Player " ++ (show c) ++ "won!")), (translate 230.0 10.0 (color c (circleSolid 15)))])
