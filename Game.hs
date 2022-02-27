@@ -20,19 +20,23 @@ cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
 
+data GameState = Running | GameOver | ShowingMovies deriving (Show, Eq)
+
 data Cell = Void Point | Marble Color Point deriving (Eq, Show)
 
 type Board = [Cell]
 
 newtype Player = Player Color deriving (Eq, Show)
 
-data Game = Game { board :: Board, player :: Player} deriving (Eq, Show)
+data Game = Game { board :: Board, player :: Player, state :: GameState} deriving (Eq, Show)
 
+testboard :: Board
 testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*1.5), Void (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void (-w, 0), Void (0, 0), Void (w, 0), Marble purple (-w*1.5, -s*1.5), Void (-(w/2), -s*1.5), Void (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)] 
     where
         w = cellWidth
         s = cellSize 
-initialGame = Game {board = testboard, player= Player red}
+
+initialGame = Game {board = testboard, player = Player red, state = Running}
 {-
 
        g     

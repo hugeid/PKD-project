@@ -6,8 +6,8 @@ import Graphics.Gloss.Data.Color
 
 import Game
 
-
-
+gameTurn :: Game -> Picture
+gameTurn (Game board (Player c) _) = translate 150.0 300.0 (pictures $ [(scale 0.2 0.2 (Text "Player to move:")), (translate 230.0 10.0 (Color (c) (circleSolid 15)))])
 
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
