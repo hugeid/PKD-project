@@ -14,12 +14,17 @@ screenHeight :: Int
 screenHeight = 700
 
 cellSize :: Float
-cellSize = fromIntegral screenWidth/90
+cellSize = fromIntegral screenWidth/(8*fromIntegral bSize)
 cellWidth :: Float
---cellWidth = (2* (cos (pi/6))) * cellSize
 cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
+
+
+bSize :: Int
+bSize = 1
+
+data Button = Button Int Point deriving (Show, Eq)
 
 data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 
@@ -27,27 +32,17 @@ type Board = [Cell]
 
 newtype Player = Player Color deriving (Eq, Show)
 
-data GamePlayers = PlayerRed 
+data GamePlayers = PlayerRed
 
-
-data GameState = Running | GameOver | ShowingMoves Cell deriving (Eq, Show)
+data GameState = Running | GameOver Player | ShowingMoves Cell | StartingScreen deriving (Eq, Show)
 
 data Game = Game { board :: Board, player :: Player, state :: GameState} deriving (Eq, Show)
 
-{-
-testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void (-(w/2),s*1.5), Void (w/2, s*1.5),
-  Marble yellow (w*1.5, s*1.5), Void (-w, 0), Void (0, 0), Void (w, 0), Marble purple (-w*1.5, -s*1.5),
-  Void (-(w/2), -s*1.5), Void (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)] 
+
+testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void grey (-(w/2),s*1.5), Void grey (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void grey (-w, 0), Void grey (0, 0), Void grey (w, 0), Marble purple (-w*1.5, -s*1.5), Void grey (-(w/2), -s*1.5), Void grey (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)]
     where
         w = cellWidth
-        s = cellSize 
--}
-
-
-
-
---- Improved parametric board ---
-
+        s = cellSize
 
 
 {- Transposes a list of coordinates diagonally. PP means plus Y, plus X (northeast),
@@ -192,10 +187,15 @@ boardSize n = eTc (encodedLst n)
 
 
 
-initialGame = Game {board = (boardSize 10), player= Player red, state = Running}
+initialGame = Game {board = boardSize bSize, player = Player red, state = StartingScreen}
 
+winnerBoard :: Board
+winnerBoard = inverse $ boardSize bSize 
 
-
+inverse :: Board -> Board
+inverse [] = []
+inverse (Marble c (x,y): cs) = Marble c (negate x, negate y):inverse cs
+inverse (Void c (x,y): cs) = Marble c (negate x, negate y):inverse cs
 
 {-
 
