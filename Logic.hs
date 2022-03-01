@@ -12,11 +12,11 @@ import Visuals
 
 
 transformGame :: Event -> Game -> Game
-transformGame (EventKey (MouseButton LeftButton) Up _ mousePos) game =
+transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x,y)) game =
     case state game of
         GameOver _     -> game
-        StartingScreen -> onClick' mousePos game
-        _              -> onClick mousePos game
+        StartingScreen -> onClick' (x, y) game
+        _              -> onClick (x*fromIntegral(bs game), (y*fromIntegral(bs game))) game
 transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
 transformGame _ game = game
 
@@ -32,14 +32,14 @@ checkButtons (x, y) game = checkButtons' (x, y) testButtons
 checkButtons' :: Point -> [Button] -> Maybe Button
 checkButtons' _ [] = Nothing
 checkButtons' (x1, y1) ((Button num (x2,y2)):bs)
-    | isInCell (x2, y2) (x1, y1) = Just (Button num (x2, y2))
+    | isInCell (x2, y2) (x1, y1) (sqrt 3 * 30) = Just (Button num (x2, y2))
     | otherwise = checkButtons' (x1, y1) bs
 
 onButtonClick :: Maybe Button -> Game -> Game
 onButtonClick (Just (Button num (x, y))) game = newBoardSize num
 
 newBoardSize :: Int -> Game
-newBoardSize num = Game {board = boardSize num, player = Player red, state = Running}
+newBoardSize num = Game {board = boardSize num, player = Player red, state = Running, bs = num}
 
 onClick :: (Float, Float) -> Game -> Game
 onClick p game = let cell = checkCells p game in
@@ -53,10 +53,10 @@ checkCells (x, y) game = checkCells' (x, y) (board game)
 checkCells' :: (Float, Float) -> Board -> Maybe Cell
 checkCells' _ [] = Nothing
 checkCells' (x1, y1) ((Void c (x2,y2)):cs)
-    | isInCell (x2,y2) (x1,y1) = Just (Void c (x2,y2))
+    | isInCell (x2,y2) (x1,y1) cellWidth = Just (Void c (x2,y2))
     | otherwise = checkCells' (x1, y1) cs
 checkCells' (x1, y1) ((Marble c (x2,y2)):cs)
-    | isInCell (x2,y2) (x1,y1) = Just (Marble c (x2,y2))
+    | isInCell (x2,y2) (x1,y1) cellWidth = Just (Marble c (x2,y2))
     | otherwise = checkCells' (x1, y1) cs
 
 
@@ -79,10 +79,10 @@ onCellClick (Just (Void c (x,y))) game =
 
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x,y)) to@(Void _ (x2,y2)) game
-    | isLegalMove from to game = let newGame = nextTurn Game {board = unbrighten $ replaceCells [to,from] [Marble c (x2,y2),Void grey (x,y)](board game), player = player game, state = Running} 
+    | isLegalMove from to game = let newGame = nextTurn game {board = unbrighten $ replaceCells [to,from] [Marble c (x2,y2),Void grey (x,y)](board game), player = player game, state = Running} 
         in 
             if checkWinner (player game) (board newGame) then
-                Game {board = board newGame, player = player newGame, state = GameOver (player game)}
+                game {board = board newGame, player = player newGame, state = GameOver (player game)}
             else
                 newGame
 
@@ -110,7 +110,7 @@ Marble purple (-103.92304,-60.0),Void grey (-34.641014,-60.0),Void grey (34.6410
 showMoves :: Cell -> Game -> Game
 showMoves cell game = let moves = legalMoves cell game
     in
-       Game {board=replaceCells moves (map brighten moves) (board game), player = player game, state = ShowingMoves cell}
+       game {board=replaceCells moves (map brighten moves) (board game), player = player game, state = ShowingMoves cell}
 
 legalMoves :: Cell -> Game -> [Cell]
 legalMoves cell game = trace ("neighbour CELLS: " ++ show (neighbours cell (board game))) filter isVoid (neighbours cell (board game)) ++ legalJumps cell game
@@ -190,7 +190,7 @@ cyclePlayer :: Player -> Player
 cyclePlayer (Player c) = Player $ swapC c
 
 nextTurn :: Game -> Game
-nextTurn game = Game {board = board game, player = cyclePlayer $ player game, state = state game}
+nextTurn game = game {board = board game, player = cyclePlayer $ player game, state = state game}
 
 swapC :: Color -> Color
 swapC c
@@ -206,8 +206,8 @@ swapC c
     checks if p2 is in the cell p1
 
 -}
-isInCell :: (Float, Float) -> (Float, Float) -> Bool
-isInCell (x1, y1) (x2, y2) = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2)) < (cellWidth/2)
+isInCell :: (Float, Float) -> (Float, Float) -> Float -> Bool
+isInCell (x1, y1) (x2, y2) w = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2)) < (w/2)
 
 extractCordslist :: Board -> [Point]
 extractCordslist xs = map extractCords xs

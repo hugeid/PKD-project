@@ -16,7 +16,7 @@ unbrighten ((Void _ (x,y)):cs) = Void grey (x,y):unbrighten cs
 unbrighten (c:cs) = c:unbrighten cs
 
 unbrightenGame :: Game -> Game
-unbrightenGame game = Game {board = unbrighten (board game), player = player game, state = state game}
+unbrightenGame game = game {board = unbrighten (board game), player = player game, state = state game}
 
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
@@ -41,7 +41,9 @@ gameAsPicture :: Game -> Picture
 gameAsPicture game = case state game of 
     StartingScreen      -> pictures [pLogoPattern, pSelBs, gameButtons]
     GameOver (Player c) -> pictures [boardAsPicture $ board game, gameOverText c]
-    _                   -> pictures [boardAsPicture $ board game, gameTurn game]
+    _                   -> pictures [scale x x $ boardAsPicture $ board game, gameTurn game]
+    where
+        x = (1/fromIntegral(bs game))
 
 boardAsPicture :: Board -> Picture
 boardAsPicture board = pictures $ boardAsPicture' board
@@ -53,7 +55,7 @@ boardAsPicture' (Marble c (x,y):cs) = hexagon x y c : boardAsPicture' cs
 
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
 gameTurn :: Game -> Picture
-gameTurn (Game board (Player c) _) = translate 85.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), translate 1.5 0 (color grey (scale 0.2 0.2 (text "Player to move:"))), (translate 230.0 10.0 (color c (circleSolid 15)))])
+gameTurn (Game board (Player c) _ _) = translate 85.0 300.0 (pictures $ [(scale 0.2 0.2 (text "Player to move:")), translate 1.5 0 (color grey (scale 0.2 0.2 (text "Player to move:"))), (translate 230.0 10.0 (color c (circleSolid 15)))])
 
 gameOverText :: Color -> Picture
 gameOverText c = translate 50.0 300.0 (pictures $ [(scale 0.2 0.2 (text $ "Player " ++ (show c) ++ "won!")), (translate 230.0 10.0 (color c (circleSolid 15)))])
@@ -80,14 +82,14 @@ colorLst = [(c 255 210 210 160), (c 255 180 180 180), (c 255 150 150 200), (c 25
 pLogoPattern = translate 0 230 (pictures $ [pLogo, pBgPattern, pBgPatternR])
 
 pLogo = pictures $ [translate 0 0 pLogoMerge, translate 2 2 pLogoMerge]
-pLogoMerge = pictures $ [pLogo1 cc,pLogo2 cc,pLogo3 cc,pLogo4 cc,pLogo5 cc,pLogo6 cc,pLogo7 cc]
-pLogo1 cc = translate (-330.0) 0.0 (color red (scale 0.5 0.5 cc))
-pLogo2 cc = translate (-329.0) 0.0 (color orange (scale 0.5 0.5 cc))
-pLogo3 cc = translate (-328.0) 0.0 (color yellow (scale 0.5 0.5 cc))
-pLogo4 cc = translate (-327.0) 0.0 (color green (scale 0.5 0.5 cc))
-pLogo5 cc = translate (-326.0) 0.0 (color blue (scale 0.5 0.5 cc))
-pLogo6 cc = translate (-325.0) 0.0 (color purple (scale 0.5 0.5 cc))
-pLogo7 cc = translate (-324.0) 0.0 (color black (scale 0.5 0.5 cc))
+pLogoMerge = pictures $ [pLogo1,pLogo2,pLogo3,pLogo4,pLogo5,pLogo6,pLogo7]
+pLogo1 = translate (-330.0) 0.0 (color red (scale 0.5 0.5 cc))
+pLogo2 = translate (-329.0) 0.0 (color orange (scale 0.5 0.5 cc))
+pLogo3 = translate (-328.0) 0.0 (color yellow (scale 0.5 0.5 cc))
+pLogo4 = translate (-327.0) 0.0 (color green (scale 0.5 0.5 cc))
+pLogo5 = translate (-326.0) 0.0 (color blue (scale 0.5 0.5 cc))
+pLogo6 = translate (-325.0) 0.0 (color purple (scale 0.5 0.5 cc))
+pLogo7 = translate (-324.0) 0.0 (color black (scale 0.5 0.5 cc))
 cc = (text "CHINESE CHECKERS")
 
 pBgPattern = translate 0 77 (pictures $ [translate 0 0 pBgPatternMerge2, translate 0 (-10) pBgPatternMerge2alt, translate 0 (-20) pBgPatternMerge2])
