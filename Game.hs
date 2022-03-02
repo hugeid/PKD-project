@@ -14,7 +14,7 @@ screenHeight :: Int
 screenHeight = 700
 
 cellSize :: Float
-cellSize = fromIntegral screenWidth/(8*fromIntegral bSize)
+cellSize = fromIntegral screenWidth/8
 cellWidth :: Float
 cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
@@ -22,9 +22,9 @@ cellHeight = 2 * cellSize
 
 
 bSize :: Int
-bSize = 1
+bSize = 2
 
-
+data Button = Button Int Point deriving (Show, Eq)
 
 data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 
@@ -32,12 +32,9 @@ type Board = [Cell]
 
 newtype Player = Player Color deriving (Eq, Show)
 
-data GamePlayers = PlayerRed
+data GameState = Running | GameOver Player | ShowingMoves Cell | StartingScreen deriving (Eq, Show)
 
-data GameState = Running | GameOver Player| ShowingMoves Cell deriving (Eq, Show)
-
-data Game = Game { board :: Board, player :: Player, state :: GameState} deriving (Eq, Show)
-
+data Game = Game { board :: Board, player :: Player, state :: GameState, bs :: Int} deriving (Eq, Show)
 
 
 testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void grey (-(w/2),s*1.5), Void grey (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void grey (-w, 0), Void grey (0, 0), Void grey (w, 0), Marble purple (-w*1.5, -s*1.5), Void grey (-(w/2), -s*1.5), Void grey (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)]
@@ -188,10 +185,10 @@ boardSize n = eTc (encodedLst n)
 
 
 
-initialGame = Game {board = boardSize bSize, player= Player red, state = Running}
+initialGame = Game {board = boardSize bSize, player = Player red, state = StartingScreen, bs = 3}
 
-winnerBoard :: Board
-winnerBoard = inverse $ boardSize bSize 
+winnerBoard :: Int -> Board
+winnerBoard n = inverse $ boardSize n 
 
 inverse :: Board -> Board
 inverse [] = []
