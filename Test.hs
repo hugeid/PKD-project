@@ -9,9 +9,6 @@ import Visuals
 -- interface
 
 
-
-
-
 testGame = Game {board = boardSize 3, player = Player red, state = Running, bs = 3}
 
 winnerGame = testGame {board = winnerBoard 3}

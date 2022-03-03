@@ -59,7 +59,7 @@ hexaCorners x y size =
 -}
 gameAsPicture :: Game -> Picture
 gameAsPicture game = case state game of
-  StartingScreen -> pictures [pLogoPattern, pSelBs, gameButtons, hintText]
+  StartingScreen -> pictures [pLogoPattern, pSelBs, gameButtons, hintText, rulesText]
   GameOver (Player c) -> pictures [boardAsPicture $ board game, gameOverText c]
   _ -> pictures [scale x x $ boardAsPicture $ board game, gameTurn game]
   where
@@ -209,6 +209,19 @@ pSelBs =
     ( pictures $
         [ translate 1.5 0 (color grey (scale 0.2 0.2 (text "Select Board Size:"))),
           scale 0.2 0.2 (text "Select Board Size:")
+        ]
+    )
+
+rulesText =
+  translate
+    (-300.0)
+    (-180.0)
+    ( pictures $
+        [ translate 1 0 (color grey (scale 0.2 0.2 (text "How to play:"))),
+          (scale 0.2 0.2 (text "How to play:")),
+          translate 0 (-25) (color grey (scale 0.15 0.15 (text "Clicking on a cell will highlight possible moves."))),
+          translate 0 (-50) (color grey (scale 0.15 0.15 (text "To win you must move all your marbles to the opposite"))),
+          translate 0 (-75) (color grey (scale 0.15 0.15 (text "triangle on the board.")))
         ]
     )
 

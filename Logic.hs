@@ -15,7 +15,15 @@ import Visuals
   otherwise -> depending on the cell the user clicks on, the board is changed.
   independent of game state, right-clicking sends the user back to the starting screen.   
 
-  RETURNS: 
+  RETURNS: game updated with the result of event
+
+  EXAMPLES: 
+    transformGame (EventKey (MouseButton LeftButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-230, 0.0)) (initialGame {state=GameOver (Player red)}) ==
+      initialGame 
+    transformGame (EventKey (MouseButton LeftButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) (initialGame {state=StartingScreen}) == 
+      initialGame {board = boardSize 2, bs = 2, state=Running}
+    transformGame (EventKey (MouseButton LeftButton) Down (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) initialGame == initialGame
+    transformGame (EventKey (MouseButton RightButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) initialGame {state = showingMoves} == initialGame
 -}
 transformGame :: Event -> Game -> Game
 transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x, y)) game =
