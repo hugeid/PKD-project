@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-
 module Logic where
 
 import Debug.Trace
@@ -10,10 +8,19 @@ import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Interface.Pure.Game
 import Visuals
 
+{- transformGame event game
+  handles input events from the user, depending on the game state if the user left-clicks
+  GameOver -> the user is sent back to the starting screen.
+  StartingScreen -> draws a game with a board size matching the button value the user clicked on.
+  otherwise -> depending on the cell the user clicks on, the board is changed.
+  independent of game state, right-clicking sends the user back to the starting screen.   
+
+  RETURNS: 
+-}
 transformGame :: Event -> Game -> Game
 transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x, y)) game =
   case state game of
-    GameOver _ -> game
+    GameOver _ -> initialGame
     StartingScreen -> onClick' mousePos game
     _ -> onClick (x * fromIntegral (bs game), y * fromIntegral (bs game)) game
 transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
@@ -56,6 +63,9 @@ onClick p game =
 
     RETURNS: Just cell where cell is the cell in game's board that contains p,
          or Nothing if p is not in any cell
+    EXAMPLES:
+      checkCells (0, 5) initialGame = Just (Void grey (0.0,0.0))
+      checkCells (500, 5) initialGame = Nothing
 -}
 checkCells :: (Float, Float) -> Game -> Maybe Cell
 checkCells p game = checkCells' p (board game)
@@ -66,6 +76,9 @@ checkCells p game = checkCells' p (board game)
     RETURNS: Just c where c is the cell in board that contains the point p,
         or Nothing if no such cell is found
 
+    EXAMPLES:
+      checkCells' (100, 100) testboard = Just (Void grey (75.77722,131.25))
+      checkCells' (250, -580) testboard = Nothing
 -}
 -- VARIANT: length board
 checkCells' :: (Float, Float) -> Board -> Maybe Cell
@@ -87,13 +100,22 @@ checkCells' (x1, y1) ((Marble c (x2, y2)) : cs)
     RETURNS: an updated game where a) the possible moves from c2 are showing,
         or b) a move is made from c2 to c,
         or c) nothing is changed
--}
+
+    EXAMPLES:
+      onCellClick (Just (Marble red (0.0,-262.5))) initialGame = Game 
+        {board = ... same board but the possible moves highlighted ... ,
+         player = ... same player sa before ...,
+         state = ShowingMoves (Marble red (0.0,-262.5)),
+         bs = ... same bs as before ...}
+
+         onCellClick (Just (Void grey (0.0,0.0))) (initialGame {state = Running}) = initialGame
+  -}
 onCellClick :: Maybe Cell -> Game -> Game
 onCellClick (Just (Marble c (x, y))) game =
   trace ("Clicked on " ++ show (x, y)) $
     let Player pc = player game
      in if pc == c
-          then showMoves (Marble c (x, y)) (unbrightenGame game)
+          then showMoves (Marble c (x, y)) game {board = unbrighten (board game)}
           else game
 onCellClick (Just (Void c (x, y))) game =
   trace ("Clicked on " ++ show (x, y)) $
@@ -102,10 +124,10 @@ onCellClick (Just (Void c (x, y))) game =
       _ -> game
 
 {- move fromCell toCell game
-    performs a move from fromCell to toCell and checks if the player who makes the move has won
-
-    RETURNS: an updated game where the new move is registered in the board
-
+  performs a move from fromCell to toCell and checks if the player who makes the move has won
+  RETURNS: an updated game where fromCell and toCell switches coordinates
+  EXAMPLES: 
+    move (Marble red (0.0., -262.5)) (Void grey (75.77722,-131.25)) initialGame = 
 -}
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
@@ -136,8 +158,9 @@ checkWinner (Player c) game = checkWinner' [cell | cell <- board game, extractCo
 
     RETURNS: True if all cells in board have a matching cell in winBoard
 -}
--- VARIANT: length board
+
 checkWinner' :: Board -> Board -> Bool
+-- VARIANT: length board
 checkWinner' [] _ = True
 checkWinner' (c : cs) winBoard
   | c `elem` winBoard = checkWinner' cs winBoard
@@ -209,15 +232,15 @@ legalJumps' acc _ _ _ = acc
     RETURNS: True if there is a Marble in board with the coordinates p (without considering decimals)
 
 -}
---VARIANT: length board
+
 canMoveTo :: Point -> Board -> Bool
+--VARIANT: length board
 canMoveTo _ [] = False
 canMoveTo p1 (Marble c p2 : cs) = canMoveTo p1 cs
 canMoveTo p1 (Void c p2 : cs) = truncateS p1 == truncateS p2 || canMoveTo p1 cs
 
 {- truncateS (x,y)
     Truncates both values in a two-tuple
-
     RETURNS: a tuple where both x and y are truncated
 
 -}

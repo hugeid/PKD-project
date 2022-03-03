@@ -7,6 +7,7 @@ purple :: Color
 purple = makeColorI 128 0 128 255
 grey :: Color
 grey = makeColorI 105 105 105 255
+opaqueWhite = makeColorI 255 255 255 128
 
 screenWidth :: Int
 screenWidth = 700
@@ -24,24 +25,63 @@ cellHeight = 2 * cellSize
 bSize :: Int
 bSize = 2
 
+{- Button represents a button the user can click on
+  A Button has an integer value and a tuple containing its coordinates 
+-}
 data Button = Button Int Point deriving (Show, Eq)
 
+{- Cell represents tile with a color and a point
+  Void is an empty tile
+  Marble is a player-owned tile, a Marble of color c belongs to the player of color c
+-}
 data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 
+-- Board represents a board of cells
 type Board = [Cell]
 
+{- Player represents a player of a color
+   A Player of color c can only move cells of the same color.
+-}
 newtype Player = Player Color deriving (Eq, Show)
 
+{- GameState represents the state of a game
+  Running is a running game
+  GameOver p is when the game is over and p has won
+  ShowingMoves c is when the possible moves from c are highlighted on the board
+  StartingScreen is the main menu/splash screen
+-}
 data GameState = Running | GameOver Player | ShowingMoves Cell | StartingScreen deriving (Eq, Show)
 
+{- Game represents the world of the program
+   a Game consists of a board, a player, a state, and a board size.
+   in Game {board = b, player = p, state = s, bs = size}
+   b is the current board of cells,
+   p is the player whose turn it is
+   s is the current state of the game
+   size is the size of the board
+
+  INVARIANT: (length b) ==  6 * size*size + 6*size + 1
+             size >= 1
+-}
 data Game = Game { board :: Board, player :: Player, state :: GameState, bs :: Int} deriving (Eq, Show)
 
-
-testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void grey (-(w/2),s*1.5), Void grey (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void grey (-w, 0), Void grey (0, 0), Void grey (w, 0), Marble purple (-w*1.5, -s*1.5), Void grey (-(w/2), -s*1.5), Void grey (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)]
-    where
-        w = cellWidth
-        s = cellSize
-
+-- testboard used in various function specifications
+testboard :: Board
+testboard =
+  [ Void grey (0.0, 0.0),
+    Void grey (75.77722, 131.25),
+    Void grey (151.55444, -0.0),
+    Void grey (-75.77722, -131.25),
+    Void grey (-151.55444, 0.0),
+    Void grey (-75.77722, 131.25),
+    Void grey (75.77722, -131.25),
+    Marble green (0.0, 262.5),
+    Marble red (0.0, -262.5),
+    Marble yellow (227.33167, 131.25),
+    Marble orange (227.33167, -131.25),
+    Marble purple (-227.33167, -131.25),
+    Marble blue (-227.33167, 131.25)
+  ]
 
 {- Transposes a list of coordinates diagonally. PP means plus Y, plus X (northeast),
   PM means plus Y, minus X (northwest), MP means minus Y, plus X (southeast). MM will not be used.
@@ -185,7 +225,7 @@ boardSize n = eTc (encodedLst n)
 
 
 
-initialGame = Game {board = boardSize bSize, player = Player red, state = StartingScreen, bs = 3}
+initialGame = Game {board = boardSize 1, player = Player red, state = StartingScreen, bs = 1}
 
 winnerBoard :: Int -> Board
 winnerBoard n = inverse $ boardSize n 
