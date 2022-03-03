@@ -110,7 +110,12 @@ onCellClick (Just (Void c (x, y))) game =
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
   | isLegalMove from to game =
-    let newGame = nextTurn game {board = unbrighten $ replaceCells [to, from] [Marble c (x2, y2), Void grey (x, y)] (board game), state = Running}
+    let newGame =
+          nextTurn
+            game
+              { board = unbrighten $ replaceCells [to, from] [Marble c (x2, y2), Void grey (x, y)] (board game),
+                state = Running
+              }
      in if checkWinner (player game) newGame
           then game {board = board newGame, player = player newGame, state = GameOver (player game)}
           else newGame
@@ -165,39 +170,39 @@ legalMoves cell game = filter isVoid (neighbours cell (board game)) ++ legalJump
     RETURNS: a list of cells to which the player can jump to from c
 -}
 legalJumps :: Cell -> Game -> [Cell]
-legalJumps = legalJumps' []
+legalJumps = legalJumpsAux []
 
-{- legalJumps'
+{- legalJumpsAux
 helper function for
 
 -}
-legalJumps' :: [Cell] -> Cell -> Game -> [Cell]
-legalJumps' acc cell game = legalJumps'' acc cell (filter (not . isVoid) (neighbours cell (board game))) game
+legalJumpsAux :: [Cell] -> Cell -> Game -> [Cell]
+legalJumpsAux acc cell game = legalJumps' acc cell (filter (not . isVoid) (neighbours cell (board game))) game
 
-{-legalJumps'' acc cell cs game
+{-legalJumps' acc cell cs game
     helper function from legalJumps'
     cs are the non-Void neighbouring cells to cell
 -}
-legalJumps'' :: [Cell] -> Cell -> [Cell] -> Game -> [Cell]
-legalJumps'' acc (Marble c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
+legalJumps' :: [Cell] -> Cell -> [Cell] -> Game -> [Cell]
+legalJumps' acc (Marble c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
   let newCoords = (x1 - 2 * (x1 - x2), y1 - 2 * (y1 - y2))
    in if canMoveTo newCoords (board game)
         then
           let newCell = findCell newCoords (board game)
            in if newCell `notElem` acc
-                then legalJumps'' (newCell : acc ++ legalJumps' (newCell : acc) newCell game) (Marble c1 (x1, y1)) cs game
-                else legalJumps'' acc (Marble c1 (x1, y1)) cs game
-        else legalJumps'' acc (Marble c1 (x1, y1)) cs game
-legalJumps'' acc (Void c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
+                then legalJumps' (newCell : acc ++ legalJumpsAux (newCell : acc) newCell game) (Marble c1 (x1, y1)) cs game
+                else legalJumps' acc (Marble c1 (x1, y1)) cs game
+        else legalJumps' acc (Marble c1 (x1, y1)) cs game
+legalJumps' acc (Void c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
   let newCoords = (x1 - 2 * (x1 - x2), y1 - 2 * (y1 - y2))
    in if canMoveTo newCoords (board game)
         then
           let newCell = findCell newCoords (board game)
            in if newCell `notElem` acc
-                then legalJumps'' (newCell : acc ++ legalJumps' (newCell : acc) newCell game) (Void c1 (x1, y1)) cs game
-                else legalJumps'' acc (Void c1 (x1, y1)) cs game
-        else legalJumps'' acc (Void c1 (x1, y1)) cs game
-legalJumps'' acc _ _ _ = acc
+                then legalJumps' (newCell : acc ++ legalJumpsAux (newCell : acc) newCell game) (Void c1 (x1, y1)) cs game
+                else legalJumps' acc (Void c1 (x1, y1)) cs game
+        else legalJumps' acc (Void c1 (x1, y1)) cs game
+legalJumps' acc _ _ _ = acc
 
 {- canMoveTo p board
     Checks if there is a Marble in board that has approximately the same coordinates as p
@@ -295,13 +300,20 @@ extractColor (Void c (x, y)) = c
 extractColor (Marble c (x, y)) = c
 
 listOfNeighbours :: (Float, Float) -> [(Float, Float)]
-listOfNeighbours (x, y) = [(x + w, y), (x - w, y), (x + (w / 2), y + (s * 1.5)), (x - (w / 2), y + (s * 1.5)), (x + (w / 2), y - (s * 1.5)), (x - (w / 2), y - (s * 1.5))]
+listOfNeighbours (x, y) =
+  [ (x + w, y),
+    (x - w, y),
+    (x + (w / 2), y + (s * 1.5)),
+    (x - (w / 2), y + (s * 1.5)),
+    (x + (w / 2), y - (s * 1.5)),
+    (x - (w / 2), y - (s * 1.5))
+  ]
   where
     s = cellSize
     w = cellWidth
 
 neighbours :: Cell -> Board -> [Cell]
-neighbours c  = findOnBoard (listOfNeighbours $ extractCords c)
+neighbours c = findOnBoard (listOfNeighbours $ extractCords c)
 
 -- neighbours c board = findOnBoard (neighbours' (extractCordslist board) (extractCords c)) board
 {-
