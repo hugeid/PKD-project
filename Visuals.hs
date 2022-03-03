@@ -5,6 +5,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Picture
 
+-- HUGO
 brighten :: Cell -> Cell
 brighten (Void c (x, y)) = Void (bright $ bright grey) (x, y)
 brighten (Marble c (x, y)) = Marble (bright c) (x, y)
@@ -61,7 +62,7 @@ gameAsPicture game = case state game of
 {- boardAsPicture board
     Renders the current board into a picture.
 
-    RETURNS: a picture representatin of board
+    RETURNS: a picture representation of board
 -}
 boardAsPicture :: Board -> Picture
 boardAsPicture board = pictures $ boardAsPicture' board
@@ -75,6 +76,7 @@ boardAsPicture' [] = []
 boardAsPicture' (Void c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 boardAsPicture' (Marble c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 
+-- JONATHAN
 -- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
 gameTurn :: Game -> Picture
 gameTurn (Game board (Player c) _ _) =
@@ -135,7 +137,7 @@ colorLst =
     c = makeColorI
 
 --- Start logo ---
-
+--OLOF
 pLogoPattern = translate 0 230 (pictures $ [pLogo, pBgPattern, pBgPatternR])
 
 pLogo = pictures $ [translate 0 0 pLogoMerge, translate 2 2 pLogoMerge]

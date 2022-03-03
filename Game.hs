@@ -7,6 +7,7 @@ purple :: Color
 purple = makeColorI 128 0 128 255
 grey :: Color
 grey = makeColorI 105 105 105 255
+opaqueWhite :: Color
 opaqueWhite = makeColorI 255 255 255 128
 
 screenWidth :: Int
@@ -83,6 +84,7 @@ testboard =
     Marble blue (-227.33167, 131.25)
   ]
 
+--OLOF
 {- Transposes a list of coordinates diagonally. PP means plus Y, plus X (northeast),
   PM means plus Y, minus X (northwest), MP means minus Y, plus X (southeast). MM will not be used.
   The variable m denotes the transposed distance, where e.g. m = 5 results in a shift equal to
@@ -101,6 +103,7 @@ transpWidthP n lst = [(x+(cellWidth*n),y) | (x,y) <- lst]
 transpWidthM n lst = [(x-(cellWidth*n),y) | (x,y) <- lst]
 
 {- Inverts a list of coordinates either vertically, or horizontally.
+
 -}
 invertX lst = [(-x,y) | (x,y) <- lst]
 invertY lst = [(x,-y) | (x,y) <- lst]

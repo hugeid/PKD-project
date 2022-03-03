@@ -34,6 +34,7 @@ transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x, y)) game =
 transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
 transformGame _ game = game
 
+--JONATHAN
 onClick' :: (Float, Float) -> Game -> Game
 onClick' b game =
   let button = checkButtons b game
@@ -134,8 +135,15 @@ onCellClick (Just (Void c (x, y))) game =
 {- move fromCell toCell game
   performs a move from fromCell to toCell and checks if the player who makes the move has won
   RETURNS: an updated game where fromCell and toCell switches coordinates
+  PRE: fromCell is a Marble, toCell is a Void
   EXAMPLES: 
-    move (Marble red (0.0., -262.5)) (Void grey (75.77722,-131.25)) initialGame = 
+    move (Marble red (0.0, -262.5)) (Void grey (75.77722,-131.25)) initialGame == 
+      initialGame {
+        board = ... (Void grey (0.0, -262.5)),..., (Marble red (75.77722,-131.25)) ...,
+        player = same player as before,
+        state = same state as before,
+        bs = same bs as before
+      }
 -}
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
@@ -152,19 +160,24 @@ move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
   | otherwise = game
 
 {-checkWinner p@(Player c) board boardsize
-    Checks if a player has won the game.
-    all cells with the color c are extracted from the board and then passed on to the helper function checkWinner'.
+  Checks if a player has won the game.
+  all cells with the color c are extracted from the board and then passed on to the helper function checkWinner'.
 
-    RETURNS: True if p has won, otherwise False
+  RETURNS: True if p has won, otherwise False
+  EXAMPLES:
+    checkWinner (Player red) initialGame == False
+    checkWinner (Player red) initialGame {board = winnerBoard 3, bs = 3} == True
+    checkWinner (Player white) initialGame {board = winnerBoard 3, bs = 3} == True
 -}
 checkWinner :: Player -> Game -> Bool
 checkWinner (Player c) game = checkWinner' [cell | cell <- board game, extractColor cell == c] (winnerBoard (bs game))
 
 {- checkWinner' board winBoard
-    Helper function from checkWinner
-    Checks if all cells in board have a matching cell in winBoard
-
-    RETURNS: True if all cells in board have a matching cell in winBoard
+  Helper function from checkWinner
+  Checks if all cells in board have a matching cell in winBoard
+  
+  RETURNS: True if all cells in board have a matching cell in winBoard
+    
 -}
 
 checkWinner' :: Board -> Board -> Bool
@@ -296,6 +309,8 @@ isVoid :: Cell -> Bool
 isVoid (Void _ _) = True
 isVoid _ = False
 
+
+-- JONATHAN 
 cyclePlayer :: Player -> Player
 cyclePlayer (Player c) = Player $ swapC c
 
