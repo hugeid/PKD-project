@@ -57,6 +57,7 @@ onButtonClick (Just (Button num (x, y))) game = newBoardSize num
 newBoardSize :: Int -> Game
 newBoardSize num = Game {board = boardSize num, player = Player red, state = Running, bs = num}
 
+--HUGO 
 {- onClick p game
     ...
 -}
