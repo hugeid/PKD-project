@@ -4,25 +4,47 @@ import Game
 import Graphics.Gloss
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Picture
-
+{-
+    red = (RGBA 1.0 0.0 0.0 1.0)
+    orange = (RGBA 1.0 0.5 0.0 1.0)
+    grey = (RGBA 0.4117647 0.4117647 0.4117647 1.0)
+    blue = (RGBA 0.0 0.0 1.0 1.0)
+    purple = (RGBA 0.5019608 0.0 0.5019608 1.0)
+    green = (RGBA 0.0 1.0 0.0 1.0)
+    yellow = (RGBA 1.0 1.0 0.0 1.0)
+-}
 -- HUGO
+{- brighten c
+  highlights a cell
+
+  RETURNS: c but the color of c is a brighter version, scaling towards white
+  EXAMPLES:
+    brighten (Void grey (0,0)) == Void (bright $ bright grey) (0,0)
+    brighten (Marble red (0,0)) == Marble (bright red) (0,0)
+-}
 brighten :: Cell -> Cell
 brighten (Void c (x, y)) = Void (bright $ bright grey) (x, y)
 brighten (Marble c (x, y)) = Marble (bright c) (x, y)
 
+{- unbrighten board
+  resets all highlighted Void cells to their original color (grey)
+  RETURNS: board but all Void cells in board have the color grey
+  EXAMPLES:
+    unbrighten [Marble (bright red) (0,0), Void (bright grey) (0,0)] == [Marble (bright red) (0,0), Void grey (0,0)]
+-}
 unbrighten :: Board -> Board
+--VARIANT: length board
 unbrighten [] = []
 unbrighten ((Void _ (x, y)) : cs) = Void grey (x, y) : unbrighten cs
 unbrighten (c : cs) = c : unbrighten cs
-
-unbrightenGame :: Game -> Game
-unbrightenGame game = game {board = unbrighten (board game), player = player game, state = state game}
 
 {- hexagon x y c
     creates a hexagon with center at (x,y) and color c
     x and y are x- and y - coordinates respectively.
 
     RETURNS: a hexagon with center (x, y) of color c
+    EXAMPLES:
+      hexagon 0 0 red == a Picture of a red hexagon with center at (0,0) and white lines surrounding it
 -}
 hexagon :: Float -> Float -> Color -> Picture
 hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color white $ line $ hexaCorners x y cellSize]
@@ -31,6 +53,9 @@ hexagon x y c = pictures [color c $ polygon $ hexaCorners x y cellSize, color wh
     calculates the corners for a hexagon at (x, y) of size s
 
     RETURNS: a list of coordinates for the corners of the hexagon at (x, y) of size s
+    EXAMPLES:
+      hexaCorners 0 0 30 == [(0.0,-30.0),(25.980762,-15.0),(25.980762,15.0),(0.0,30.0),(-25.980762,15.0),(-25.980762,-15.0),(0.0,-30.0)]
+      hexaCorners 0 0 0 == [(0.0,0.0),(0.0,0.0),(0.0,0.0),(0.0,0.0),(0.0,0.0),(0.0,0.0),(0.0,0.0)]
 
 -}
 hexaCorners :: Float -> Float -> Float -> Path
@@ -69,9 +94,10 @@ boardAsPicture board = pictures $ boardAsPicture' board
 
 {- boardAsPicture' board
     helper function for boardAsPicture
-
+    RETURNS: a list of hexagon pictures representing the cells in board
 -}
 boardAsPicture' :: Board -> [Picture]
+-- VARIANT: length board
 boardAsPicture' [] = []
 boardAsPicture' (Void c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 boardAsPicture' (Marble c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
@@ -205,7 +231,6 @@ rulesText =
         ]
     )
 
-
 hintText =
   translate
     (-300.0)
@@ -215,3 +240,6 @@ hintText =
           scale 0.15 0.15 (text "Hint: You can right-click any time to go back to main menu")
         ]
     )
+
+
+
