@@ -116,9 +116,11 @@ addDpoint (x,y) = (x+(cellWidth/2), y+cellHeight*0.75)
   see "D-line" in the attached image "chart.jpg". 
 -}
 addDline :: Int -> [(Float,Float)] -> [(Float,Float)]
-addDline n [] =  addDline (n-1) [addDpoint (0,0)]
 addDline 0 lst = lst
+addDline n [] =  addDline (n-1) [addDpoint (0,0)]
 addDline n lst = addDline (n-1) (addDpoint (head lst) : lst)
+
+
 
 --- Triangles ---
 
@@ -197,6 +199,7 @@ cTe lst "purple" = [(z,"cP") | z <- lst]
 cTe lst "blue" = [(z,"cB") | z <- lst]
 cTe lst "green" = [(z,"cG") | z <- lst]
 cTe lst "red" = [(z,"cR") | z <- lst]
+
 
 {- The concatenated list of all color encoders, i.e., a list of coordinates with color strings.
   The list consists of tuples of the form (coordinates, color string).

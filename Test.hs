@@ -1,4 +1,3 @@
-module Test where
 import Debug.Trace
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
@@ -17,11 +16,11 @@ test2 = TestCase $ assertEqual "length listOfNeighbours 0 0 == 6" 6 (length $ li
 
 test3 =
   let (x, y) = (12, 11)
-   in TestCase $ assertEqual ("extractCoords " ++ show (x, y)) (x, y) (extractCords (Void grey (x, y)))
+   in TestCase $ assertEqual ("extractCoords " ++ show (x, y)) (x, y) (extractCoords (Void grey (x, y)))
 
 test4 =
   let (x, y) = (-0.1, 0)
-   in TestCase $ assertEqual ("extractCoords " ++ show (x, y)) (x, y) (extractCords (Void grey (x, y)))
+   in TestCase $ assertEqual ("extractCoords " ++ show (x, y)) (x, y) (extractCoords (Void grey (x, y)))
 
 test5 = TestCase $ assertEqual "extractColor grey" grey (extractColor (Void grey (0, 0)))
 
@@ -42,7 +41,7 @@ test10 =
 
 test11 =
   let (x, y) = (20.0, -250.5)
-   in TestCase $ assertBool "isInCell" (isInCell (extractCords (Marble red (0.0, -262.5))) (x, y) cellWidth)
+   in TestCase $ assertBool "isInCell" (isInCell (extractCoords (Marble red (0.0, -262.5))) (x, y) cellWidth)
 
 test12 = TestCase $ assertEqual "findCell" (Marble green (0, 262.5)) (findCell (0, 262.5) testboard)
 
@@ -78,8 +77,6 @@ test20 = TestCase $ assertEqual "legalMoves bottom red in 3-board" moves (legalM
         moves = [Void grey (-151.55444,525.0),Void grey (-303.1089,262.5),Void grey (-454.66333,0.0),Void grey (-303.1089,-262.5),Void grey (-151.55444,-525.0)]
 test21 = TestCase $ assertEqual "legalMoves red 1-board" [Void grey (75.77722,131.25),Void grey (-75.77722,131.25)] (legalMoves (Marble red (0, 262.5)) initialGame)
 test22 = TestCase $ assertEqual "legalMoves no moves" [] (legalMoves (Marble red (2,2)) initialGame)
-
-
 tests =
   [ test1,
     test2,

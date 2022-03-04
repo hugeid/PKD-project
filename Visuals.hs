@@ -119,11 +119,14 @@ gameTurn (Game board (Player c) _ _) =
 gameOverText :: Color -> Picture
 gameOverText c =
   translate
-    50.0
-    300.0
-    ( pictures $
-        [ scale 0.2 0.2 (text $ "Player " ++ show c ++ "won!"),
-          translate 230.0 10.0 (color c (circleSolid 15))
+    0
+    0.0
+    ( pictures
+        [ translate 0 0 (color opaqueWhite (circleSolid 700)),
+          translate (-230) (-12) $ scale 0.5 0.5 (text "Player "),
+          translate 0.0 0.0 (color c (circleSolid 40)),
+          translate 5.0 (-12) $ scale 0.5 0.5 (text " won!"),
+          translate (-168) (-110) $ scale 0.2 0.2 (text "Click anywhere to restart")
         ]
     )
 
