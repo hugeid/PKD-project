@@ -52,7 +52,7 @@ hexaCorners x y size =
 -}
 gameAsPicture :: Game -> Picture
 gameAsPicture game = case state game of
-  StartingScreen -> pictures [pLogoPattern, pSelBs, gameButtons]
+  StartingScreen -> pictures [pLogoPattern, pSelBs, gameButtons, hintText, rulesText]
   GameOver (Player c) -> pictures [boardAsPicture $ board game, gameOverText c]
   _ -> pictures [scale x x $ boardAsPicture $ board game, gameTurn game]
   where
@@ -75,19 +75,30 @@ boardAsPicture' [] = []
 boardAsPicture' (Void c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 boardAsPicture' (Marble c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 
--- Translate 150.0 300.0 är x- och y-koordinater för textboxen.
+
+-- JONATHAN ------------------------------------------------------------------------------------------------
+
+{- gameTurn (Player c)
+  Draws a picture of the player to move text along with a circle of color c
+  RETURNS: A picture containing "Player to move:" text and a circle of color c
+  EXAMPLES: gameTurn Game {player = Player red}   == Translate 85.0 300.0 (Pictures [Scale 0.2 0.2 (Text "Player to move:"),
+                                                     Translate 1.0 0.0 (Color grey (Scale 0.2 0.2 (Text "Player to move:"))),
+                                                     Translate 230.0 10.0 (Color red (ThickCircle 7.5 15.0))])
+            gameTurn Game {player = Player blue}  == Translate 85.0 300.0 (Pictures [Scale 0.2 0.2 (Text "Player to move:"),
+                                                     Translate 1.0 0.0 (Color grey (Scale 0.2 0.2 (Text "Player to move:"))),
+                                                     Translate 230.0 10.0 (Color blue (ThickCircle 7.5 15.0))])
+-}
 gameTurn :: Game -> Picture
-gameTurn (Game board (Player c) _ _) =
-  translate
-    85.0
-    300.0
+gameTurn (Game _ (Player c) _ _) =
+  translate 85.0 300.0
     ( pictures $
         [ scale 0.2 0.2 (text "Player to move:"),
-          translate 1.5 0 (color grey (scale 0.2 0.2 (text "Player to move:"))),
+          translate 1 0 (color grey (scale 0.2 0.2 (text "Player to move:"))),
           translate 230.0 10.0 (color c (circleSolid 15))
         ]
     )
 
+{--}
 gameOverText :: Color -> Picture
 gameOverText c =
   translate
@@ -99,6 +110,7 @@ gameOverText c =
         ]
     )
 
+{--}
 testButtons :: [Button]
 testButtons =
   [ Button 1 (-230, 0.0),
@@ -111,16 +123,22 @@ testButtons =
     Button 8 (190, 0.0)
   ]
 
+{--}
 gameButtons :: Picture
 gameButtons = pictures $ gameButtons' testButtons colorLst
 
+{--}
 gameButtons' :: [Button] -> [Color] -> [Picture]
+gameButtons' _ [] = []
 gameButtons' [] _ = []
 gameButtons' ((Button num (x, y)) : xs) (c : cs) = buttons c (x, y) : translate (x - 7.0) (y - 10.0) (scale 0.2 0.2 (text $ show num)) : gameButtons' xs cs
 
+{--}
 buttons :: Color -> Point -> Picture
 buttons c (x, y) = pictures [color c $ polygon $ hexaCorners x y 30, color black $ line $ hexaCorners x y 30]
 
+{--}
+colorLst :: [Color]
 colorLst =
   [ c 255 210 210 160,
     c 255 180 180 180,
@@ -135,7 +153,7 @@ colorLst =
     c = makeColorI
 
 --- Start logo ---
-
+-- OLOF --------------------------------------------------------------------------
 pLogoPattern = translate 0 230 (pictures $ [pLogo, pBgPattern, pBgPatternR])
 
 pLogo = pictures $ [translate 0 0 pLogoMerge, translate 2 2 pLogoMerge]
@@ -185,7 +203,7 @@ pSelBs =
     (-300.0)
     65.0
     ( pictures $
-        [ translate 1.5 0 (color grey (scale 0.2 0.2 (text "Select Board Size:"))),
+        [ translate 1 0 (color grey (scale 0.2 0.2 (text "Select Board Size:"))),
           (scale 0.2 0.2 (text "Select Board Size:"))
         ]
     )
@@ -193,9 +211,22 @@ pSelBs =
 rulesText =
   translate
     (-300.0)
-    65.0
+    (-180.0)
     ( pictures $
-        [ translate 1 0 (color grey (scale 0.2 0.2 (text "Select Board Size:"))),
-          (scale 0.2 0.2 (text "Select Board Size:"))
+        [ translate 1 0 (color grey (scale 0.2 0.2 (text "How to play:"))),
+          (scale 0.2 0.2 (text "How to play:")),
+          translate 0 (-25) (color grey (scale 0.15 0.15 (text "Clicking on a cell will highlight possible moves."))),
+          translate 0 (-50) (color grey (scale 0.15 0.15 (text "To win you must move all your marbles to the opposite"))),
+          translate 0 (-75) (color grey (scale 0.15 0.15 (text "triangle on the board.")))
+        ]
+    )
+
+hintText =
+  translate
+    (-300.0)
+    (-100)
+    ( pictures $
+        [ translate 1 0 (color grey (scale 0.15 0.15 (text "Hint: You can right-click any time to go back to main menu"))),
+          scale 0.15 0.15 (text "Hint: You can right-click any time to go back to main menu")
         ]
     )
