@@ -59,7 +59,15 @@ newBoardSize num = Game {board = boardSize num, player = Player red, state = Run
 
 -- HUGO
 {- onClick p game
-    ...
+  When the user has clicked on the screen, this function checks if that point is inside of a cell.
+  RETURNS: game if p is in a cell in game's board, otherwise an updated game depending on the state, the board, etc.
+  EXAMPLES:
+    onClick (0,0) initialGame == initialGame
+    onClick (0.0,-262.5) initialGame == Game
+        {board = ... same board but the possible moves highlighted ... ,
+         player = ... same player as before ...,
+         state = ShowingMoves (Marble red (0.0,-262.5)),
+         bs = ... same bs as before ...}
 -}
 onClick :: (Float, Float) -> Game -> Game
 onClick p game =
@@ -114,7 +122,7 @@ checkCells' (x1, y1) ((Marble c (x2, y2)) : cs)
     EXAMPLES:
       onCellClick (Just (Marble red (0.0,-262.5))) initialGame = Game
         {board = ... same board but the possible moves highlighted ... ,
-         player = ... same player sa before ...,
+         player = ... same player as before ...,
          state = ShowingMoves (Marble red (0.0,-262.5)),
          bs = ... same bs as before ...}
 
