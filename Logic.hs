@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-
 module Logic where
 
 import Debug.Trace
@@ -10,77 +8,56 @@ import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Interface.Pure.Game
 import Visuals
 
-testboard = [Marble green (0, s*3), Marble blue (-w*1.5 ,s*1.5), Void grey (-(w/2),s*1.5), Void grey (w/2, s*1.5), Marble yellow (w*1.5, s*1.5), Void grey (-w, 0), Void grey (0, 0), Void grey (w, 0), Marble purple (-w*1.5, -s*1.5), Void grey (-(w/2), -s*1.5), Void grey (w/2, -s*1.5), Marble orange (w*1.5, -s*1.5), Marble red (0, -s*3)]
-    where
-        w = cellWidth
-        s = cellSize
+{- transformGame event game
+  handles input events from the user, depending on the game state if the user left-clicks
+  GameOver -> the user is sent back to the starting screen.
+  StartingScreen -> draws a game with a board size matching the button value the user clicked on.
+  otherwise -> depending on the cell the user clicks on, the board is changed.
+  independent of game state, right-clicking sends the user back to the starting screen.   
 
+  RETURNS: game updated with the result of event
+
+  EXAMPLES: 
+    transformGame (EventKey (MouseButton LeftButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-230, 0.0)) (initialGame {state=GameOver (Player red)}) ==
+      initialGame 
+    transformGame (EventKey (MouseButton LeftButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) (initialGame {state=StartingScreen}) == 
+      initialGame {board = boardSize 2, bs = 2, state=Running}
+    transformGame (EventKey (MouseButton LeftButton) Down (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) initialGame == initialGame
+    transformGame (EventKey (MouseButton RightButton) Up (Modifiers {shift = Up, ctrl = Up, alt = Up}) (-170, 0.0)) initialGame {state = showingMoves} == initialGame
+-}
 transformGame :: Event -> Game -> Game
-transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x, y)) game = trace (show mousePos) $
+transformGame (EventKey (MouseButton LeftButton) Up _ mousePos@(x, y)) game =
   case state game of
-    GameOver _ -> game
+    GameOver _ -> initialGame
     StartingScreen -> onClick' mousePos game
     _ -> onClick (x * fromIntegral (bs game), y * fromIntegral (bs game)) game
 transformGame (EventKey (MouseButton RightButton) Up _ _) _ = initialGame
 transformGame _ game = game
 
-
-{- onClick' mouseCoords game
-  When a button is clicked; draws a board of size and board scale = (buttons num) and starts the game
-  RETURNS: Iff mouseCoords == coords of any button = update game board size and board scaling to (button num), otherwise do nothing
-  EXAMPLES: onClick' (700,700) initialGame      == initialGame
-            onClick' (22.0,-22.0) initialGame   == Game {board = boardSize 5, player = Player red, state = Running, bs = 5}
-            onClick' (-229.0,-19.0) initialGame == Game {board = boardSize 1, player = Player red, state = Running, bs = 1}
--}
-onClick' :: Point -> Game -> Game
-onClick' c game =
-  let button = checkButtons c
+--JONATHAN
+onClick' :: (Float, Float) -> Game -> Game
+onClick' b game =
+  let button = checkButtons b game
    in case button of
         Nothing -> game
-        _       -> onButtonClick button game
+        _ -> onButtonClick button game
 
-{- checkButtons p game
-  Checks which button was pressed 
-  RETURNS: Iff p is within a button b, return Just b, else return nothing
-  EXAMPLES: checkButtons (-500.0,-99.0) initialGame  == Nothing
-            checkButtons (-230.0,-18.0) initialGame  == Just (Button 1 (-230.0,0.0)) 
-            checkButtons (211.0,13.0) initialGame    == Just (Button 8 (190.0,0.0))
--}
-checkButtons :: Point -> Maybe Button
-checkButtons (x, y) = checkButtons' (x, y) testButtons
+checkButtons :: Point -> Game -> Maybe Button
+checkButtons (x, y) game = checkButtons' (x, y) testButtons
 
-{- checkButtons' p lstOfButtons
-  Helper function and implementation for checkbuttons
-  RETURNS: Iff p is within a button b, return Just b, else return nothing
-  EXAMPLES: 
--}
 checkButtons' :: Point -> [Button] -> Maybe Button
---VARIANT: length bs
 checkButtons' _ [] = Nothing
 checkButtons' (x1, y1) ((Button num (x2, y2)) : bs)
-  | isInCell (x2, y2) (x1, y1) buttonWidth = trace (show (x2, y2)) $ Just (Button num (x2, y2))
+  | isInCell (x2, y2) (x1, y1) (sqrt 3 * 30) = Just (Button num (x2, y2))
   | otherwise = checkButtons' (x1, y1) bs
-    where buttonWidth = sqrt 3 * 30
 
-{- onButtonClick b@(Button num (x, y)) game
-  Extracts the num value from b
-  RETURNS: A modified game where the board is of size num and the scaling is num
-  EXAMPLES: onButtonClick (Just (Button 1 (-230.0,0.0))) initialGame == Game {board = boardSize 1, player = Player red, state = Running, bs = 1}
-            onButtonClick (Just (Button 5 (10, 0.0))) initialGame    == Game {board = boardSize 5, player = Player red, state = Running, bs = 5}
-            onButtonClick (Just (Button 8 (190.0,0.0))) initialGame  == Game {board = boardSize 8, player = Player red, state = Running, bs = 8}          
--}
 onButtonClick :: Maybe Button -> Game -> Game
-onButtonClick (Just (Button num (x, y))) game = newBoardSize num game
+onButtonClick (Just (Button num (x, y))) game = newBoardSize num
 
-{- newBoardSize num
-  Sets the game board size and scaling
-  RETURNS: A modified game where the board is size num and the scaling is num
-  EXAMPLES: newBoardSize 1 == Game {board = boardSize 1, state = Running, bs = 1}
-            newBoardSize 3 == Game {board = boardSize 3, state = Running, bs = 3}
--}
-newBoardSize :: Int -> Game -> Game
-newBoardSize num game = game {board = boardSize num, state = Running, bs = num}
+newBoardSize :: Int -> Game
+newBoardSize num = Game {board = boardSize num, player = Player red, state = Running, bs = num}
 
+--HUGO 
 {- onClick p game
     ...
 -}
@@ -96,6 +73,9 @@ onClick p game =
 
     RETURNS: Just cell where cell is the cell in game's board that contains p,
          or Nothing if p is not in any cell
+    EXAMPLES:
+      checkCells (0, 5) initialGame = Just (Void grey (0.0,0.0))
+      checkCells (500, 5) initialGame = Nothing
 -}
 checkCells :: (Float, Float) -> Game -> Maybe Cell
 checkCells p game = checkCells' p (board game)
@@ -106,6 +86,9 @@ checkCells p game = checkCells' p (board game)
     RETURNS: Just c where c is the cell in board that contains the point p,
         or Nothing if no such cell is found
 
+    EXAMPLES:
+      checkCells' (100, 100) testboard = Just (Void grey (75.77722,131.25))
+      checkCells' (250, -580) testboard = Nothing
 -}
 -- VARIANT: length board
 checkCells' :: (Float, Float) -> Board -> Maybe Cell
@@ -127,13 +110,22 @@ checkCells' (x1, y1) ((Marble c (x2, y2)) : cs)
     RETURNS: an updated game where a) the possible moves from c2 are showing,
         or b) a move is made from c2 to c,
         or c) nothing is changed
--}
+
+    EXAMPLES:
+      onCellClick (Just (Marble red (0.0,-262.5))) initialGame = Game 
+        {board = ... same board but the possible moves highlighted ... ,
+         player = ... same player sa before ...,
+         state = ShowingMoves (Marble red (0.0,-262.5)),
+         bs = ... same bs as before ...}
+
+         onCellClick (Just (Void grey (0.0,0.0))) (initialGame {state = Running}) = initialGame
+  -}
 onCellClick :: Maybe Cell -> Game -> Game
 onCellClick (Just (Marble c (x, y))) game =
   trace ("Clicked on " ++ show (x, y)) $
     let Player pc = player game
      in if pc == c
-          then showMoves (Marble c (x, y)) (unbrightenGame game)
+          then showMoves (Marble c (x, y)) game {board = unbrighten (board game)}
           else game
 onCellClick (Just (Void c (x, y))) game =
   trace ("Clicked on " ++ show (x, y)) $
@@ -142,10 +134,17 @@ onCellClick (Just (Void c (x, y))) game =
       _ -> game
 
 {- move fromCell toCell game
-    performs a move from fromCell to toCell and checks if the player who makes the move has won
-
-    RETURNS: an updated game where the new move is registered in the board
-
+  performs a move from fromCell to toCell and checks if the player who makes the move has won
+  RETURNS: an updated game where fromCell and toCell switches coordinates
+  PRE: fromCell is a Marble, toCell is a Void
+  EXAMPLES: 
+    move (Marble red (0.0, -262.5)) (Void grey (75.77722,-131.25)) initialGame == 
+      initialGame {
+        board = ... (Void grey (0.0, -262.5)),..., (Marble red (75.77722,-131.25)) ...,
+        player = same player as before,
+        state = same state as before,
+        bs = same bs as before
+      }
 -}
 move :: Cell -> Cell -> Game -> Game
 move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
@@ -162,22 +161,28 @@ move from@(Marble c (x, y)) to@(Void _ (x2, y2)) game
   | otherwise = game
 
 {-checkWinner p@(Player c) board boardsize
-    Checks if a player has won the game.
-    all cells with the color c are extracted from the board and then passed on to the helper function checkWinner'.
+  Checks if a player has won the game.
+  all cells with the color c are extracted from the board and then passed on to the helper function checkWinner'.
 
-    RETURNS: True if p has won, otherwise False
+  RETURNS: True if p has won, otherwise False
+  EXAMPLES:
+    checkWinner (Player red) initialGame == False
+    checkWinner (Player red) initialGame {board = winnerBoard 3, bs = 3} == True
+    checkWinner (Player white) initialGame {board = winnerBoard 3, bs = 3} == True
 -}
 checkWinner :: Player -> Game -> Bool
 checkWinner (Player c) game = checkWinner' [cell | cell <- board game, extractColor cell == c] (winnerBoard (bs game))
 
 {- checkWinner' board winBoard
-    Helper function from checkWinner
-    Checks if all cells in board have a matching cell in winBoard
-
-    RETURNS: True if all cells in board have a matching cell in winBoard
+  Helper function from checkWinner
+  Checks if all cells in board have a matching cell in winBoard
+  
+  RETURNS: True if all cells in board have a matching cell in winBoard
+    
 -}
--- VARIANT: length board
+
 checkWinner' :: Board -> Board -> Bool
+-- VARIANT: length board
 checkWinner' [] _ = True
 checkWinner' (c : cs) winBoard
   | c `elem` winBoard = checkWinner' cs winBoard
@@ -249,15 +254,15 @@ legalJumps' acc _ _ _ = acc
     RETURNS: True if there is a Marble in board with the coordinates p (without considering decimals)
 
 -}
---VARIANT: length board
+
 canMoveTo :: Point -> Board -> Bool
+--VARIANT: length board
 canMoveTo _ [] = False
 canMoveTo p1 (Marble c p2 : cs) = canMoveTo p1 cs
 canMoveTo p1 (Void c p2 : cs) = truncateS p1 == truncateS p2 || canMoveTo p1 cs
 
 {- truncateS (x,y)
     Truncates both values in a two-tuple
-
     RETURNS: a tuple where both x and y are truncated
 
 -}
@@ -305,33 +310,14 @@ isVoid :: Cell -> Bool
 isVoid (Void _ _) = True
 isVoid _ = False
 
-{- nextTurn game
-  Changes the current player to the next one in the turn order
-  RETURNS: The updated game with the next player in the turn order of swapC
-  EXAMPLES: nextTurn initialGame                    == game {player = Player purple}
-            nextTurn game {player = Player purple}  == game {player = Player blue}
-            nextTurn game {player = Player blue}    == game {player = Player green}   ** (Funkar inte in terminalen men tydligt?)
--}
-nextTurn :: Game -> Game
-nextTurn game = game {player = cyclePlayer $ player game}
 
-{- cyclePlayer (Player c)
-  Swaps the color of the current player
-  RETURNS: The next player in the turn order of swapC
-  EXAMPLES: cyclePlayer (Player red)    == Player purple
-            cyclePlayer (Player purple) == Player blue
-            cyclePlayer (Player blue)   == Player green
--}
+-- JONATHAN 
 cyclePlayer :: Player -> Player
 cyclePlayer (Player c) = Player $ swapC c
 
-{- swapC c
-  Changes the color c
-  RETURNS: The next color from a fixed order
-  EXAMPLES: swapC red     = purple
-            swapC purple  = blue
-            swapC blue    = green
--}
+nextTurn :: Game -> Game
+nextTurn game = game {player = cyclePlayer $ player game}
+
 swapC :: Color -> Color
 swapC c
   | c == red = purple
@@ -342,27 +328,24 @@ swapC c
   | c == orange = red
   | otherwise = grey
 
-{- isInCell p1 p2 w
-  Checks if p2 is within the cell/button p1
-  RETURNS: True iff the hypotenuse between p1 & p2 < the radius of the cell = (w/2), otherwise False
-  EXAMPLES: isInCell (32.0,-320.0) (0.0,-262.5) cellWidth           == True
-            isInCell (-254.0,-164.0) (-227.33167,-131.25) cellWidth == True
-            isInCell (-221.0,-10.0) (-230.0,0.0) buttonWidth        == True
-            isInCell (-305.0,-20.0) (-230.0,0.0) buttonWidth        == False
+{-isInCell p1 p2
+    checks if p2 is in the cell p1
+
 -}
-isInCell :: Point -> Point -> Float -> Bool
+isInCell :: (Float, Float) -> (Float, Float) -> Float -> Bool
 isInCell (x1, y1) (x2, y2) w = sqrt ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) < (w / 2)
 
-{- extractCoords c
+
+{- extractCords c
   Extracts the coordinates of a cell
   RETURNS: The coordinates of c
-  EXAMPLES: extractCoords (Void grey (0,0))     == (0,0)
-            extractCoords (Marble blue (10,20)) == (10,20)
-            extractCoords (Marble green (42,0)) == (42,0)
+  EXAMPLES: extractCords (Void grey (0,0))     == (0,0)
+            extractCords (Marble blue (10,20)) == (10,20)
+            extractCords (Marble green (42,0)) == (42,0)
 -}
-extractCoords :: Cell -> Point
-extractCoords (Void c (x, y)) = (x, y)
-extractCoords (Marble c (x, y)) = (x, y)
+extractCords :: Cell -> Point
+extractCords (Void c (x, y)) = (x, y)
+extractCords (Marble c (x, y)) = (x, y)
 
 {- extractColor c
   Extracts the color of a cell
@@ -381,7 +364,7 @@ extractColor (Marble c (x, y)) = c
   EXAMPLES: listOfNeighbours (0.0,0.0)    == [(151.55444,0.0),(-151.55444,0.0),(75.77722,131.25),(-75.77722,131.25),(75.77722,-131.25),(-75.77722,-131.25)]
             listOfNeighbours (0.0,-262.5) == [(151.55444,-262.5),(-151.55444,-262.5),(75.77722,-131.25),(-75.77722,-131.25),(75.77722,-393.75),(-75.77722,-393.75)]
 -}
-listOfNeighbours :: Point -> [Point]
+listOfNeighbours :: (Float, Float) -> [(Float, Float)]
 listOfNeighbours (x, y) =
   [ (x + w, y),
     (x - w, y),
@@ -411,7 +394,7 @@ listOfNeighbours (x, y) =
                                                                 Void grey (75.77722,-131.25)]
 -}
 neighbours :: Cell -> Board -> [Cell]
-neighbours c = findOnBoard (listOfNeighbours $ extractCoords c)
+neighbours c = findOnBoard (listOfNeighbours $ extractCords c)
 
 {- findCell (x,y) b
   Finds the cell with coordinates (x,y) on the board.
@@ -419,16 +402,16 @@ neighbours c = findOnBoard (listOfNeighbours $ extractCoords c)
   EXAMPLES: findCell _ []            == Void black (0,0)
             findCell (0,0) testboard == Void grey (0,0)
 -}
-findCell :: Point -> Board -> Cell
+findCell :: (Float, Float) -> Board -> Cell
 --VARIANT: length cs
 findCell _ [] = Void black (0, 0) -- Temp Cell, removed at findOnBoard
 findCell (x, y) (c : cs)
-  | truncateS (x, y) == truncateS (extractCoords c) = c
+  | let (x2, y2) = extractCords c in truncateS (x, y) == truncateS (x2, y2) = c
   | otherwise = findCell (x, y) cs
 
-{- findOnBoard lsCoords b
+{- findOnBoard lsCords b
   Matches cells on the board by their coordinates.
-  RETURNS: A list of cells in the board b with the coordinates from lsCoords
+  RETURNS: A list of cells in the board b with the coordinates from lsCords
   EXAMPLES: findOnBoard [(0,0),(151.55444,0.0),(75.77722,131.25)] testboard == [Void grey (0,0), Void grey (151.5444,0.0)]
 -}
 findOnBoard :: [Point] -> Board -> Board

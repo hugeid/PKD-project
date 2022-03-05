@@ -5,6 +5,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Picture
 
+-- HUGO
 brighten :: Cell -> Cell
 brighten (Void c (x, y)) = Void (bright $ bright grey) (x, y)
 brighten (Marble c (x, y)) = Marble (bright c) (x, y)
@@ -61,7 +62,7 @@ gameAsPicture game = case state game of
 {- boardAsPicture board
     Renders the current board into a picture.
 
-    RETURNS: a picture representatin of board
+    RETURNS: a picture representation of board
 -}
 boardAsPicture :: Board -> Picture
 boardAsPicture board = pictures $ boardAsPicture' board
@@ -75,11 +76,9 @@ boardAsPicture' [] = []
 boardAsPicture' (Void c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 boardAsPicture' (Marble c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
 
-
--- JONATHAN ------------------------------------------------------------------------------------------------
-
+-- JONATHAN 
 {- gameTurn (Player c)
-  Draws a picture of the player to move text along with a circle of color c
+  Draws a picture of the player to move text along with a circle with the color of the current player
   RETURNS: A picture containing "Player to move:" text and a circle of color c
   EXAMPLES: gameTurn Game {player = Player red}   == Translate 85.0 300.0 (Pictures [Scale 0.2 0.2 (Text "Player to move:"),
                                                      Translate 1.0 0.0 (Color grey (Scale 0.2 0.2 (Text "Player to move:"))),
@@ -89,16 +88,24 @@ boardAsPicture' (Marble c (x, y) : cs) = hexagon x y c : boardAsPicture' cs
                                                      Translate 230.0 10.0 (Color blue (ThickCircle 7.5 15.0))])
 -}
 gameTurn :: Game -> Picture
-gameTurn (Game _ (Player c) _ _) =
-  translate 85.0 300.0
+gameTurn (Game board (Player c) _ _) =
+  translate
+    85.0
+    300.0
     ( pictures $
         [ scale 0.2 0.2 (text "Player to move:"),
-          translate 1 0 (color grey (scale 0.2 0.2 (text "Player to move:"))),
+          translate 1.5 0 (color grey (scale 0.2 0.2 (text "Player to move:"))),
           translate 230.0 10.0 (color c (circleSolid 15))
         ]
     )
 
-{--}
+{- gameOverText c
+    Draws a Game Over picture showing who won
+    RESULTS: A Game Over picture; "Player (Circle) won!", where the circle is matching the victorious player's color c.
+    EXAMPLES: gameOverText red == "Player (red circle) won!"
+              gameOverText blue == "Player (blue circle) won!"
+
+-}
 gameOverText :: Color -> Picture
 gameOverText c =
   translate
@@ -110,7 +117,8 @@ gameOverText c =
         ]
     )
 
-{--}
+
+-- List of all buttons used in the main menu/starting screen
 testButtons :: [Button]
 testButtons =
   [ Button 1 (-230, 0.0),
@@ -123,22 +131,30 @@ testButtons =
     Button 8 (190, 0.0)
   ]
 
-{--}
+{- gameButtons 
+    Creates the button pictures and assigns them colors
+    RETURNS: A picture of all the buttons in testButtons 
+-}
 gameButtons :: Picture
 gameButtons = pictures $ gameButtons' testButtons colorLst
 
-{--}
+{- gameButtons' buttonLst colorLst
+    Helper function for gameButtons and implementation
+    RETURNS: A list of button pictures
+-}
 gameButtons' :: [Button] -> [Color] -> [Picture]
-gameButtons' _ [] = []
 gameButtons' [] _ = []
 gameButtons' ((Button num (x, y)) : xs) (c : cs) = buttons c (x, y) : translate (x - 7.0) (y - 10.0) (scale 0.2 0.2 (text $ show num)) : gameButtons' xs cs
 
-{--}
+{- buttons c p
+    Creates a hexagonal button picture
+    RETURNS: A hexagonal picture of color c centered at the coordinates p
+-}
 buttons :: Color -> Point -> Picture
 buttons c (x, y) = pictures [color c $ polygon $ hexaCorners x y 30, color black $ line $ hexaCorners x y 30]
 
-{--}
-colorLst :: [Color]
+
+-- List of the color gradient used when making the buttons
 colorLst =
   [ c 255 210 210 160,
     c 255 180 180 180,
@@ -153,7 +169,7 @@ colorLst =
     c = makeColorI
 
 --- Start logo ---
--- OLOF --------------------------------------------------------------------------
+--OLOF
 pLogoPattern = translate 0 230 (pictures $ [pLogo, pBgPattern, pBgPatternR])
 
 pLogo = pictures $ [translate 0 0 pLogoMerge, translate 2 2 pLogoMerge]
@@ -220,6 +236,7 @@ rulesText =
           translate 0 (-75) (color grey (scale 0.15 0.15 (text "triangle on the board.")))
         ]
     )
+
 
 hintText =
   translate
