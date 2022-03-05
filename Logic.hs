@@ -1,12 +1,55 @@
 module Logic where
 
-import Debug.Trace
 import Game
+  ( Board,
+    Button (..),
+    Cell (..),
+    Game (..),
+    GameState (GameOver, Running, ShowingMoves, StartingScreen),
+    Player (..),
+    boardSize,
+    cellSize,
+    cellWidth,
+    grey,
+    initialGame,
+    purple,
+    winnerBoard,
+  )
 import Graphics.Gloss
+  ( Color,
+    Point,
+    black,
+    blue,
+    green,
+    orange,
+    red,
+    yellow,
+  )
 import Graphics.Gloss.Data.Color
-import Graphics.Gloss.Data.Picture
+  ( Color,
+    black,
+    blue,
+    green,
+    orange,
+    red,
+    yellow,
+  )
+import Graphics.Gloss.Data.Picture (Point)
 import Graphics.Gloss.Interface.Pure.Game
-import Visuals
+  ( Color,
+    Event (EventKey),
+    Key (MouseButton),
+    KeyState (Up),
+    MouseButton (LeftButton, RightButton),
+    Point,
+    black,
+    blue,
+    green,
+    orange,
+    red,
+    yellow,
+  )
+import Visuals (brighten, testButtons, unbrighten)
 
 {- transformGame event game
   handles input events from the user, depending on the game state if the user left-clicks
@@ -47,13 +90,13 @@ onClick' c game =
   let button = checkButtons c
    in case button of
         Nothing -> game
-        _       -> onButtonClick button game
+        _ -> onButtonClick button game
 
 {- checkButtons p game
-  Checks which button was pressed 
+  Checks which button was pressed
   RETURNS: Iff p is within a button b, return Just b, else return nothing
   EXAMPLES: checkButtons (-500.0,-99.0) initialGame  == Nothing
-            checkButtons (-230.0,-18.0) initialGame  == Just (Button 1 (-230.0,0.0)) 
+            checkButtons (-230.0,-18.0) initialGame  == Just (Button 1 (-230.0,0.0))
             checkButtons (211.0,13.0) initialGame    == Just (Button 8 (190.0,0.0))
 -}
 checkButtons :: Point -> Maybe Button
@@ -62,20 +105,34 @@ checkButtons (x, y) = checkButtons' (x, y) testButtons
 {- checkButtons' p lstOfButtons
   Helper function and implementation for checkbuttons
   RETURNS: Iff p is within a button b, return Just b, else return nothing
-  EXAMPLES: 
+  EXAMPLES:
 -}
 checkButtons' :: Point -> [Button] -> Maybe Button
 --VARIANT: length bs
 checkButtons' _ [] = Nothing
 checkButtons' (x1, y1) ((Button num (x2, y2)) : bs)
-  | isInCell (x2, y2) (x1, y1) buttonWidth = trace (show (x2, y2)) $ Just (Button num (x2, y2))
+  | isInCell (x2, y2) (x1, y1) buttonWidth = Just (Button num (x2, y2))
   | otherwise = checkButtons' (x1, y1) bs
-    where buttonWidth = sqrt 3 * 30
+  where
+    buttonWidth = sqrt 3 * 30
 
-
+{- onButtonClick b@(Just (Button num (x, y))) game
+  Extracts the num value from b
+  PRE: b =/ Nothing
+  RETURNS: A modified game where the board is of size num and the scaling is num
+  EXAMPLES: onButtonClick (Just (Button 1 (-230.0,0.0))) initialGame == Game {board = boardSize 1, player = Player red, state = Running, bs = 1}
+            onButtonClick (Just (Button 5 (10, 0.0))) initialGame    == Game {board = boardSize 5, player = Player red, state = Running, bs = 5}
+            onButtonClick (Just (Button 8 (190.0,0.0))) initialGame  == Game {board = boardSize 8, player = Player red, state = Running, bs = 8}
+-}
 onButtonClick :: Maybe Button -> Game -> Game
 onButtonClick (Just (Button num (x, y))) game = newBoardSize num
 
+{- newBoardSize num
+  Sets the game board size and scaling
+  RETURNS: A modified game where the board is size num and the scaling is num
+  EXAMPLES: newBoardSize 1 == Game {board = boardSize 1, state = Running, bs = 1}
+            newBoardSize 3 == Game {board = boardSize 3, state = Running, bs = 3}
+-}
 newBoardSize :: Int -> Game
 newBoardSize num = Game {board = boardSize num, player = Player red, state = Running, bs = num}
 
@@ -121,7 +178,7 @@ checkCells p game = checkCells' p (board game)
       checkCells' (250, -580) testboard = Nothing
 -}
 -- VARIANT: length board
-checkCells' :: Point-> Board -> Maybe Cell
+checkCells' :: Point -> Board -> Maybe Cell
 checkCells' _ [] = Nothing
 checkCells' (x1, y1) ((Void c (x2, y2)) : cs)
   | isInCell (x2, y2) (x1, y1) cellWidth = Just (Void c (x2, y2))
@@ -153,16 +210,14 @@ checkCells' (x1, y1) ((Marble c (x2, y2)) : cs)
 onCellClick :: Maybe Cell -> Game -> Game
 onCellClick Nothing _ = error "onCellClick does not accept Nothing argument"
 onCellClick (Just (Marble c (x, y))) game =
-  trace ("Clicked on Marble " ++ show (x, y)) $
-    let Player pc = player game
-     in if pc == c
-          then showMoves (Marble c (x, y)) game {board = unbrighten (board game)}
-          else game
+  let Player pc = player game
+   in if pc == c
+        then showMoves (Marble c (x, y)) game {board = unbrighten (board game)}
+        else game
 onCellClick (Just (Void c (x, y))) game =
-  trace ("Clicked on Void " ++ show (x, y)) $
-    case state game of
-      ShowingMoves cell -> move cell (Void c (x, y)) game
-      _ -> game
+  case state game of
+    ShowingMoves cell -> move cell (Void c (x, y)) game
+    _ -> game
 
 {- move fromCell toCell game
   performs a move from fromCell to toCell and checks if the player who makes the move has won
@@ -262,8 +317,6 @@ showMoves cell game = game {board = replaceCells moves (map brighten moves) (boa
 legalMoves :: Cell -> Game -> [Cell]
 legalMoves cell game = filter isVoid (neighbours cell (board game)) ++ legalJumps cell game
 
-  
-
 {-legalJumps c game
     Calculates the legal jumps from c in game.
     A jump is where the Marble "jumps" over another Marble and lands on the opposite side of that Marble.
@@ -320,25 +373,18 @@ legalJumpsAux acc cell game = legalJumps' acc cell (filter (not . isVoid) (neigh
 -}
 legalJumps' :: [Cell] -> Cell -> [Cell] -> Game -> [Cell]
 -- VARIANT: length cs
-legalJumps' acc (Marble c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
-  let newCoords = (x1 + 2 * (x2 - x1), y1 + 2 * (y2 - y1))
+legalJumps' acc _ [] _ = acc
+legalJumps' acc cell (Marble _ (x2, y2) : cs) game =
+  let newCoords = (2*x2-x1, 2*y2-y1)
    in if canMoveTo newCoords (board game)
         then
           let newCell = findCell newCoords (board game)
            in if newCell `notElem` acc
-                then legalJumps' (legalJumpsAux (newCell : acc) newCell game) (Marble c1 (x1, y1)) cs game
-                else legalJumps' acc (Marble c1 (x1, y1)) cs game
-        else legalJumps' acc (Marble c1 (x1, y1)) cs game
-legalJumps' acc (Void c1 (x1, y1)) (Marble _ (x2, y2) : cs) game =
-  let newCoords = (x1 + 2 * (x2 - x1), y1 + 2 * (y2 - y1))
-   in if canMoveTo newCoords (board game)
-        then
-          let newCell = findCell newCoords (board game)
-           in if newCell `notElem` acc
-                then legalJumps' (legalJumpsAux (newCell : acc) newCell game) (Void c1 (x1, y1)) cs game
-                else legalJumps' acc (Void c1 (x1, y1)) cs game
-        else legalJumps' acc (Void c1 (x1, y1)) cs game
-legalJumps' acc _ _ _ = acc
+                then legalJumps' (legalJumpsAux (newCell : acc) newCell game) cell cs game
+                else legalJumps' acc cell cs game
+        else legalJumps' acc cell cs game
+  where
+    (x1, y1) = extractCoords cell
 
 {- canMoveTo p board
     Checks if there is a Void in board that has approximately the same coordinates as p

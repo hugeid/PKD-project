@@ -10,6 +10,15 @@ testGame = Game {board = boardSize 3, player = Player red, state = Running, bs =
 
 winnerGame = testGame {board = winnerBoard 3}
 
+neighbourLst =
+  [ Void grey (151.55444, 0.0),
+    Void grey (-151.55444, 0.0),
+    Void grey (75.77722, 131.25),
+    Void grey (-75.77722, 131.25),
+    Void grey (75.77722, -131.25),
+    Void grey (-75.77722, -131.25)
+  ]
+
 test19Game =
   Game
     { board =
@@ -91,6 +100,7 @@ test19Game =
       state = Running,
       bs = 3
     }
+
 test20Game =
   Game
     { board =
@@ -172,4 +182,3 @@ test20Game =
       state = Running,
       bs = 3
     }
-
