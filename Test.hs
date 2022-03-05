@@ -117,7 +117,7 @@ invertXY lst = a ==  b
 qCinvertXY :: IO ()
 qCinvertXY = quickCheck (withMaxSuccess 200 invertXY)
 
-{- qCinvertXY
+{- dLine n
     Checks that cell n in the D-line is the same cell as origo transposed 
     diagonally north west n times. Due to the nature of floats, these 
     values may need to be truncated.
