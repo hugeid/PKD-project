@@ -44,7 +44,6 @@ cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
 
-
 {- Button represents a button the user can click on
   A Button has an integer value and a tuple containing its coordinates
   INVARIANT: in Button n p, n >= 1
@@ -84,15 +83,14 @@ data GameState = Running | GameOver Player | ShowingMoves Cell | StartingScreen 
    s is the current state of the game
    bSize is the size of the board
 
-  INVARIANT: (length b) ==  6 * bSize*bSize + 6*bSize + 1
+  INVARIANT: (length b) ==  6 * bSize² + 6*bSize + 1
              bSize >= 1
-             p's col
 -}
 data Game = Game {board :: Board, player :: Player, state :: GameState, bs :: Int} deriving (Eq, Show)
 
 -- testboard used in various function specifications
 testboard :: Board
-testboard = 
+testboard =
   [ Void grey (0.0, 0.0),
     Void grey (75.77722, 131.25),
     Void grey (151.55444, -0.0),
@@ -109,6 +107,7 @@ testboard =
   ]
 
 --- Parametric board ---
+-- See chart.jpg for terminology
 
 {- diagPP lst m
     Transposes a list of points diagonally m steps north east. PP means plus Y, plus X.
@@ -216,10 +215,10 @@ addDpoint (x, y) = (x + (cellWidth / 2), y + cellHeight * 0.75)
               addDline 2 [(1,2)] == [(152.55444,264.5),(76.77722,133.25),(1.0,2.0)]
               addDline 0 [(1,2),(3,4)] == [(1.0,2.0),(3.0,4.0)]
               addDline 2 [(1,2),(3,4)] == [(152.55444,264.5),(76.77722,133.25),(1.0,2.0),(3.0,4.0)]
-addDline :: Int -> [(Float,Float)] -> [(Float,Float)]
--- VARIANT: n
 -}
 
+addDline :: Int -> [(Float,Float)] -> [(Float,Float)]
+-- VARIANT: n
 addDline 0 lst = lst
 addDline n [] = addDline (n - 1) [addDpoint (0, 0)]
 addDline n lst = addDline (n - 1) (addDpoint (head lst) : lst)
@@ -369,7 +368,7 @@ tricB n lst = invertX (tricY n lst)
 tri6 :: Float -> [(Float, Float)] -> [(Float, Float)]
 tri6 n lst = transpWidthP n (tricB n lst)
 
-{- Creates triangle 3, which consists of Void cells. See attached image. In order to generate a properly shaped board,
+{- Creates triangle 3, which consists of Void cells. See chart.jpg. In order to generate a properly shaped board,
     this function always takes a triangle 2-list as argument, and n should correspond to that of boardSize.
     RETURNS: list of points making up a triangle
     EXAMPLES: tri3 1 (tri2 (tri1 1 (addDline 1 []))) == [(75.77722,-131.25)]
@@ -428,13 +427,10 @@ cTe lst "red" = [(z, "cR") | z <- lst]
 encodedLst :: Int -> [((Float, Float), String)]
 encodedLst n =
   cTe
-    ([(0, 0)] ++ t1 ++ t2 ++ tri4n5 t1 ++ tri4n5 t2 ++ tri6 f t2 ++ tri3 f t2)
-    "grey"
+    ([(0, 0)] ++ t1 ++ t2 ++ tri4n5 t1 ++ tri4n5 t2 ++ tri6 f t2 ++ tri3 f t2) "grey"
     ++ cTe (tricG f t1) "green"
     ++ cTe (tricR f t1) "red"
-    ++ cTe
-      (tricY f t2)
-      "yellow"
+    ++ cTe (tricY f t2) "yellow"
     ++ cTe (tricO f t2) "orange"
     ++ cTe (tricP f t2) "purple"
     ++ cTe (tricB f t2) "blue"
@@ -492,31 +488,34 @@ initialGame = Game {board = boardSize 1, player = Player red, state = StartingSc
     Creates an inverted starting board, which is used as a blueprint for the winner's board.
     PRE: n > 0.
     RETURNS: a board of size n where all marbles are in their expected winning position
-    EXAMPLES: winnerBoard 1 == [Marble grey (-0.0,-0.0),
-    Marble grey (-75.77722,-131.25),
-    Marble grey (-151.55444,0.0),
-    Marble grey (75.77722,131.25),
-    Marble grey (151.55444,-0.0),
-    Marble grey (75.77722,-131.25),
-    Marble grey (-75.77722,131.25),
-    Marble green (-0.0,-262.5),Marble red (-0.0,262.5),
-    Marble yellow (-227.33167,-131.25),Marble orange (-227.33167,131.25),
-    Marble purple (227.33167,131.25),
-    Marble blue (227.33167,-131.25)]
+    EXAMPLES: winnerBoard 1 ==
+                              [ Marble grey (-0.0, -0.0),
+                                  Marble grey (-75.77722, -131.25),
+                                  Marble grey (-151.55444, 0.0),
+                                  Marble grey (75.77722, 131.25),
+                                  Marble grey (151.55444, -0.0),
+                                  Marble grey (75.77722, -131.25),
+                                  Marble grey (-75.77722, 131.25),
+                                  Marble green (-0.0, -262.5),
+                                  Marble red (-0.0, 262.5),
+                                  Marble yellow (-227.33167, -131.25),
+                                  Marble orange (-227.33167, 131.25),
+                                  Marble purple (227.33167, 131.25),
+                                  Marble blue (227.33167, -131.25)
+                              ]
 -}
+
 winnerBoard :: Int -> Board
 winnerBoard n = inverse $ boardSize n
 
 {- inverse b
     Inverts a board.
-    PRE:
     RETURNS: a board of the cells in b where each cell's coordinates are inverted.
     EXAMPLES: inverse [Void grey (0.0, 0.0)] ==
     [Void grey (-0.0,-0.0)]
               inverse [Marble red (0.0, -262.5), Marble blue (-227.33167, 131.25)] ==
     [Marble red (-0.0,262.5),Marble blue (227.33167,-131.25)]
               inverse [] == []
-    EXAMPLES:
 -}
 inverse :: Board -> Board
 -- VARIANT: length of b.

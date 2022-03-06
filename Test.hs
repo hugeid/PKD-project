@@ -1,8 +1,7 @@
-
 import Game
-  ( Cell (Marble, Void),
+  ( Board (..),
+    Cell (Marble, Void),
     Player (Player),
-    Board (..),
     addDline,
     boardSize,
     cellWidth,
@@ -42,7 +41,7 @@ import Logic
     move,
     neighbours,
     transformGame,
-    truncateS
+    truncateS,
   )
 import Test.HUnit
   ( Test (TestCase, TestList),
@@ -53,10 +52,10 @@ import Test.HUnit
 import Test.QuickCheck
   ( Positive (Positive),
     quickCheck,
+    verboseCheck,
     withMaxSuccess,
-    verboseCheck
   )
-import Test_assets  -- placed the very long variables in another file to make it more readable
+import Test_assets -- placed the very long variables in another file to make it more readable
 
 test1 = TestCase $ assertEqual "boardsize 3" 73 (length $ boardSize 3)
 
@@ -99,7 +98,14 @@ test13 = TestCase $ assertEqual "findOnBoard" [Marble green (0, 262.5), Marble b
 
 test14 = TestCase $ assertEqual "neighbours" lst (neighbours (Void grey (0, 0)) testboard)
   where
-    lst = [Void grey (151.55444, 0.0), Void grey (-151.55444, 0.0), Void grey (75.77722, 131.25), Void grey (-75.77722, 131.25), Void grey (75.77722, -131.25), Void grey (-75.77722, -131.25)]
+    lst =
+      [ Void grey (151.55444, 0.0),
+        Void grey (-151.55444, 0.0),
+        Void grey (75.77722, 131.25),
+        Void grey (-75.77722, 131.25),
+        Void grey (75.77722, -131.25),
+        Void grey (-75.77722, -131.25)
+      ]
 
 -- From origo: One diagonal step north east plus one diagonal step north west results in x = 0.
 test15 = TestCase $ assertEqual "diagonal steps to x = 0" 0 (fst (head (diagPM (diagPP [(0, 0)] 1) 1)))
@@ -134,38 +140,26 @@ test19 =
 -- legalMoves tests 20-22
 test20 = TestCase $ assertEqual "legalMoves bottom red in 3-board" moves (legalMoves (Marble red (0.0, -787.5)) test20Game)
   where
-    moves = [Void grey (-151.55444, 525.0), Void grey (-303.1089, 262.5), Void grey (-454.66333, 0.0), Void grey (-303.1089, -262.5), Void grey (-151.55444, -525.0)]
+    moves =
+      [ Void grey (-151.55444, 525.0),
+        Void grey (-303.1089, 262.5),
+        Void grey (-454.66333, 0.0),
+        Void grey (-303.1089, -262.5),
+        Void grey (-151.55444, -525.0)
+      ]
 
-test21 = TestCase $ assertEqual "legalMoves red 1-board" [Void grey (75.77722, 131.25), Void grey (-75.77722, 131.25)] (legalMoves (Marble red (0, 262.5)) initialGame)
+test21 = TestCase $ assertEqual "legalMoves red 1-board" 
+  [
+   Void grey (75.77722, 131.25),
+   Void grey (-75.77722, 131.25)
+  ] 
+   (legalMoves (Marble red (0, 262.5)) initialGame)
 
 test22 = TestCase $ assertEqual "legalMoves no moves" [] (legalMoves (Marble red (2, 2)) initialGame)
 
-tests =
-  [ test1,
-    test2,
-    test3,
-    test4,
-    test5,
-    test6,
-    test7,
-    test8,
-    test9,
-    test10,
-    test11,
-    test12,
-    test13,
-    test14,
-    test15,
-    test16,
-    test17,
-    test18,
-    test19,
-    test20,
-    test21,
-    test22
-  ]
 
-runtests = runTestTT $ TestList tests
+
+
 
 -- Quickcheck --
 
@@ -231,21 +225,41 @@ qCEncodedLstTest = quickCheck encodedLstTest
 neighbourProp :: Positive Int -> Bool
 neighbourProp (Positive n)
   | n == 0 = True
-  | otherwise = truncateBoard (neighbours (Void grey (0,0)) (boardSize n) ) == truncateBoard neighbourLst
+  | otherwise = truncateBoard (neighbours (Void grey (0, 0)) (boardSize n)) == truncateBoard neighbourLst
 
 {- truncateboard b
   truncates all coordinates in b
-  RETURNS: b but each cell's coordinates are truncated
-  EXAMPLES:
-    truncateBoard testboard == [(0,0),(75,131),(151,0),(-75,-131),(-151,0),(-75,131),(75,-131),(0,262),(0,-262),(227,131),(227,-131),(-227,-131),(-227,131)]
-
 -}
 truncateBoard :: Integral a => Board -> [(a, a)]
 truncateBoard = map (truncateS . extractCoords)
 
 neighbourTest :: IO ()
 neighbourTest = quickCheck neighbourProp
-
+tests =
+  [ test1,
+    test2,
+    test3,
+    test4,
+    test5,
+    test6,
+    test7,
+    test8,
+    test9,
+    test10,
+    test11,
+    test12,
+    test13,
+    test14,
+    test15,
+    test16,
+    test17,
+    test18,
+    test19,
+    test20,
+    test21,
+    test22
+  ]
+runtests = runTestTT $ TestList tests
 main :: IO ()
 main = do
   runtests
@@ -258,3 +272,4 @@ main = do
   putStrLn "-- encodedLst test --"
   qCEncodedLstTest
   putStrLn "-- Neighbour coords test --"
+  neighbourTest
