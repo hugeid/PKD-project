@@ -44,17 +44,18 @@ cellWidth = sqrt 3 * cellSize
 cellHeight :: Float
 cellHeight = 2 * cellSize
 
-bSize :: Int
-bSize = 2
 
 {- Button represents a button the user can click on
   A Button has an integer value and a tuple containing its coordinates
+  INVARIANT: in Button n p, n >= 1
 -}
 data Button = Button Int Point deriving (Show, Eq)
 
 {- Cell represents tile with a color and a point
   Void is an empty tile
   Marble is a player-owned tile, a Marble of color c belongs to the player of color c
+  INVARIANT: in Void c p, c is either grey or (bright $ bright grey)
+             in Marble c p, c is in [red, purple, blue, green, yellow, orange]
 -}
 data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 
@@ -62,7 +63,8 @@ data Cell = Void Color Point | Marble Color Point deriving (Eq, Show)
 type Board = [Cell]
 
 {- Player represents a player of a color
-   A Player of color c can only move cells of the same color.
+   A Player of color c can only move cells of color c.
+   INVARIANT: in Player c, c must be in [red, purple, blue, green, yellow, orange]
 -}
 newtype Player = Player Color deriving (Eq, Show)
 
@@ -76,20 +78,21 @@ data GameState = Running | GameOver Player | ShowingMoves Cell | StartingScreen 
 
 {- Game represents the world of the program
    a Game consists of a board, a player, a state, and a board size.
-   in Game {board = b, player = p, state = s, bs = size}
+   in Game {board = b, player = p, state = s, bs = bSize}
    b is the current board of cells,
    p is the player whose turn it is
    s is the current state of the game
-   size is the size of the board
+   bSize is the size of the board
 
-  INVARIANT: (length b) ==  6 * size*size + 6*size + 1
-             size >= 1
+  INVARIANT: (length b) ==  6 * bSize*bSize + 6*bSize + 1
+             bSize >= 1
+             p's col
 -}
 data Game = Game {board :: Board, player :: Player, state :: GameState, bs :: Int} deriving (Eq, Show)
 
 -- testboard used in various function specifications
 testboard :: Board
-testboard =
+testboard = 
   [ Void grey (0.0, 0.0),
     Void grey (75.77722, 131.25),
     Void grey (151.55444, -0.0),
