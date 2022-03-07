@@ -157,7 +157,10 @@ test21 = TestCase $ assertEqual "legalMoves red 1-board"
 
 test22 = TestCase $ assertEqual "legalMoves no moves" [] (legalMoves (Marble red (2, 2)) initialGame)
 
-
+test23 = TestCase $ assertEqual "diagonal steps comparison" (diagPM [(1,2)] 4) (diagMP [(1,2)] (-4))
+-- A transposition of 5 steps to the east equals a transposition of (-5) steps to the west.
+test24 = TestCase $ assertEqual "transpose width comparison" 
+  (transpWidthP 5 [(1,2),(3,4)]) (transpWidthM (-5) [(1,2),(3,4)])
 
 
 
@@ -257,7 +260,9 @@ tests =
     test19,
     test20,
     test21,
-    test22
+    test22,
+    test23,
+    test24
   ]
 runtests = runTestTT $ TestList tests
 main :: IO ()
